@@ -80,8 +80,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
         self.assertEquals(result, 0)
 
     def test_build_dir_exists(self):
-        result = os.path.exists("../build")
-        self.assertTrue(result)
+        self.assertTrue(os.path.exists("../build"), 'Run setup.py build, then setup.py dist')
 
     def test_conf(self):
         try:
