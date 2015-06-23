@@ -13,9 +13,10 @@
 # under the License.
 
 try:
-    import xml.etree.cElementTree as ET
+    from xml.etree.cElementTree import Element, SubElement
 except ImportError:
-    import xml.etree.ElementTree as ET
+    from xml.etree.ElementTree import Element, SubElement
+
 
 class Scheme(object):
     """Class representing the metadata for a modular input kind.
@@ -56,28 +57,28 @@ class Scheme(object):
 
         :returns root, an ``ET.Element`` representing this scheme.
         """
-        root = ET.Element("scheme")
+        root = Element("scheme")
 
-        ET.SubElement(root, "title").text = self.title
+        SubElement(root, "title").text = self.title
 
         # add a description subelement if it's defined
         if self.description is not None:
-            ET.SubElement(root, "description").text = self.description
+            SubElement(root, "description").text = self.description
 
         # add all other subelements to this Scheme, represented by (tag, text)
-        subelements = [
+        sub_elements = [
             ("use_external_validation", self.use_external_validation),
             ("use_single_instance", self.use_single_instance),
             ("streaming_mode", self.streaming_mode)
         ]
-        for name, value in subelements:
-            ET.SubElement(root, name).text = str(value).lower()
+        for name, value in sub_elements:
+            SubElement(root, name).text = str(value).lower()
 
-        endpoint = ET.SubElement(root, "endpoint")
+        endpoint = SubElement(root, "endpoint")
 
-        args = ET.SubElement(endpoint, "args")
+        args = SubElement(endpoint, "args")
 
-        # add arguments as subelements to the <args> element
+        # add arguments as sub_elements to the <args> element
         for arg in self.arguments:
             arg.add_to_document(args)
 

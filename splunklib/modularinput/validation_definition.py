@@ -14,11 +14,11 @@
 
 
 try:
-    import xml.etree.cElementTree as ET
+    from xml.etree.cElementTree import parse
 except ImportError as ie:
-    import xml.etree.ElementTree as ET
+    from xml.etree.ElementTree import parse
 
-from utils import parse_xml_data
+from splunklib.modularinput.utils import parse_xml_data
 
 
 class ValidationDefinition(object):
@@ -30,6 +30,7 @@ class ValidationDefinition(object):
     ``v = ValidationDefinition()``
 
     """
+
     def __init__(self):
         self.metadata = {}
         self.parameters = {}
@@ -68,7 +69,7 @@ class ValidationDefinition(object):
         definition = ValidationDefinition()
 
         # parse XML from the stream, then get the root node
-        root = ET.parse(stream).getroot()
+        root = parse(stream).getroot()
 
         for node in root:
             # lone item node

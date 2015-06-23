@@ -13,9 +13,9 @@
 # under the License.
 
 try:
-    import xml.etree.cElementTree as ET
+    from xml.etree.cElementTree import Element, SubElement, tostring
 except ImportError as ie:
-    import xml.etree.ElementTree as ET
+    from xml.etree.ElementTree import Element, SubElement, tostring
 
 class Event(object):
     """Represents an event or fragment of an event to be written by this modular input to Splunk.
@@ -79,29 +79,29 @@ class Event(object):
         if self.data is None:
             raise ValueError("Events must have at least the data field set to be written to XML.")
 
-        event = ET.Element("event")
+        event = Element("event")
         if self.stanza is not None:
             event.set("stanza", self.stanza)
         event.set("unbroken", str(int(self.unbroken)))
 
         # if a time isn't set, let Splunk guess by not creating a <time> element
         if self.time is not None:
-            ET.SubElement(event, "time").text = str(self.time)
+            SubElement(event, "time").text = str(self.time)
 
         # add all other subelements to this Event, represented by (tag, text)
-        subelements = [
+        sub_elements = [
             ("source", self.source),
             ("sourcetype", self.sourceType),
             ("index", self.index),
             ("host", self.host),
             ("data", self.data)
         ]
-        for node, value in subelements:
+        for node, value in sub_elements:
             if value is not None:
-                ET.SubElement(event, node).text = value
+                SubElement(event, node).text = value
 
         if self.done is not None:
-            ET.SubElement(event, "done")
+            SubElement(event, "done")
 
-        stream.write(ET.tostring(event))
+        stream.write(tostring(event))
         stream.flush()

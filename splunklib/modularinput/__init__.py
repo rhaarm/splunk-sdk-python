@@ -3,10 +3,10 @@ the splunklib.modularinput package like so:
 
 from splunklib.modularinput import *
 """
-from argument import Argument
-from event import Event
-from event_writer import EventWriter
-from input_definition import InputDefinition
-from scheme import Scheme
-from script import Script
-from validation_definition import ValidationDefinition
+from splunklib.modularinput.argument import Argument
+from splunklib.modularinput.event import Event
+from splunklib.modularinput.event_writer import EventWriter
+from splunklib.modularinput.input_definition import InputDefinition
+from splunklib.modularinput.scheme import Scheme
+from splunklib.modularinput.script import Script
+from splunklib.modularinput.validation_definition import ValidationDefinition

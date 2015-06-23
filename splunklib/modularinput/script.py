@@ -12,8 +12,14 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Python 2&3 compatibility
+from future.standard_library import install_aliases
+install_aliases()
+
 from abc import ABCMeta, abstractmethod
-from urlparse import urlsplit
+
+from urllib.parse import urlsplit
+
 import sys
 
 from splunklib.client import Service
@@ -22,9 +28,9 @@ from splunklib.modularinput.input_definition import InputDefinition
 from splunklib.modularinput.validation_definition import ValidationDefinition
 
 try:
-    import xml.etree.cElementTree as ET
+    from xml.etree.cElementTree import Element, SubElement
 except ImportError:
-    import xml.etree.ElementTree as ET
+    from xml.etree.ElementTree import Element, SubElement
 
 
 class Script(object):
@@ -92,19 +98,19 @@ class Script(object):
                     self.validate_input(validation_definition)
                     return 0
                 except Exception as e:
-                    root = ET.Element("error")
-                    ET.SubElement(root, "message").text = e.message
+                    root = Element("error")
+                    SubElement(root, "message").text = str(e)
                     event_writer.write_xml_document(root)
 
                     return 1
             else:
                 err_string = "ERROR Invalid arguments to modular input script:" + ' '.join(
                     args)
-                event_writer._err.write(err_string)
+                event_writer.err.write(err_string)
 
         except Exception as e:
-            err_string = EventWriter.ERROR + e.message
-            event_writer._err.write(err_string)
+            err_string = EventWriter.ERROR + str(e)
+            event_writer.err.write(err_string)
             return 1
 
     @property

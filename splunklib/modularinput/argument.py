@@ -13,9 +13,10 @@
 # under the License.
 
 try:
-    import xml.etree.ElementTree as ET
+    from xml.etree.ElementTree import SubElement
 except ImportError:
-    import xml.etree.cElementTree as ET
+    from xml.etree.cElementTree import SubElement
+
 
 class Argument(object):
     """Class representing an argument to a modular input kind.
@@ -77,23 +78,23 @@ class Argument(object):
         :param parent: An ``ET.Element`` to be the parent of a new <arg> subelement
         :returns: An ``ET.Element`` object representing this argument.
         """
-        arg = ET.SubElement(parent, "arg")
+        arg = SubElement(parent, "arg")
         arg.set("name", self.name)
 
         if self.description is not None:
-            ET.SubElement(arg, "description").text = self.description
+            SubElement(arg, "description").text = self.description
 
         if self.validation is not None:
-            ET.SubElement(arg, "validation").text = self.validation
+            SubElement(arg, "validation").text = self.validation
 
         # add all other subelements to this Argument, represented by (tag, text)
-        subelements = [
+        sub_elements = [
             ("data_type", self.data_type),
             ("required_on_edit", self.required_on_edit),
             ("required_on_create", self.required_on_create)
         ]
 
-        for name, value in subelements:
-            ET.SubElement(arg, name).text = str(value).lower()
+        for name, value in sub_elements:
+            SubElement(arg, name).text = str(value).lower()
 
         return arg

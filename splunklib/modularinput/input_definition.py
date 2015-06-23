@@ -13,11 +13,12 @@
 # under the License.
 
 try:
-    import xml.etree.cElementTree as ET
-except ImportError as ie:
-    import xml.etree.ElementTree as ET
+    from xml.etree.cElementTree import parse
+except ImportError:
+    from xml.etree.ElementTree import parse
 
-from utils import parse_xml_data
+from splunklib.modularinput.utils import parse_xml_data
+
 
 class InputDefinition:
     """``InputDefinition`` encodes the XML defining inputs that Splunk passes to
@@ -28,7 +29,8 @@ class InputDefinition:
         i = InputDefinition()
 
     """
-    def __init__ (self):
+
+    def __init__(self):
         self.metadata = {}
         self.inputs = {}
 
@@ -47,7 +49,7 @@ class InputDefinition:
         definition = InputDefinition()
 
         # parse XML from the stream, then get the root node
-        root = ET.parse(stream).getroot()
+        root = parse(stream).getroot()
 
         for node in root:
             if node.tag == "configuration":

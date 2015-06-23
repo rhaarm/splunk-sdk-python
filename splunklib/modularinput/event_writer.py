@@ -14,12 +14,11 @@
 
 import sys
 
-from splunklib.modularinput.event import ET
-
 try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+    from xml.etree.cElementTree import tostring
+except ImportError as ie:
+    from xml.etree.ElementTree import tostring
+
 
 class EventWriter(object):
     """``EventWriter`` writes events and error messages to Splunk from a modular input.
@@ -36,7 +35,7 @@ class EventWriter(object):
     ERROR = "ERROR"
     FATAL = "FATAL"
 
-    def __init__(self, output = sys.stdout, error = sys.stderr):
+    def __init__(self, output=sys.stdout, error=sys.stderr):
         """
         :param output: Where to write the output; defaults to sys.stdout.
         :param error: Where to write any errors; defaults to sys.stderr.
@@ -46,6 +45,14 @@ class EventWriter(object):
 
         # has the opening <stream> tag been written yet?
         self.header_written = False
+
+    @property
+    def err(self):
+        return self._err
+
+    @property
+    def out(self):
+        return self._out
 
     def write_event(self, event):
         """Writes an ``Event`` object to Splunk.
@@ -76,7 +83,7 @@ class EventWriter(object):
 
         :param document: An ``ElementTree`` object.
         """
-        self._out.write(ET.tostring(document))
+        self._out.write(tostring(document))
         self._out.flush()
 
     def close(self):
