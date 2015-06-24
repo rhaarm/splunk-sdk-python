@@ -12,14 +12,18 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import
+from future import standard_library
+
+standard_library.install_aliases()
+
+import six
+
 from inspect import getmembers, isclass, isfunction
 from types import FunctionType, MethodType
 from json import JSONEncoder
 
-try:
-    from collections import OrderedDict  # must be python 2.7
-except ImportError:
-    from ordereddict import OrderedDict  # must be python 2.6
+from collections import OrderedDict
 
 from .search_command_internals import ConfigurationSettingsType
 from .validators import OptionName
@@ -37,6 +41,7 @@ class Configuration(object):
     style guide <http://docs.splunk.com/Documentation/Splunk/6.0/Search/Searchcommandstyleguide>`_
 
     """
+
     def __init__(self, **kwargs):
         self.settings = kwargs
 
@@ -61,9 +66,7 @@ class Configuration(object):
             o.ConfigurationSettings.fix_up(o)
             Option.fix_up(o)
         else:
-            raise TypeError(
-                'Incorrect usage: Configuration decorator applied to %s'
-                % (type(o), o.__name__))
+            raise TypeError('Incorrect usage: Configuration decorator applied to %s'.format(type(o)), o.__name__)
         return o
 
 
@@ -118,6 +121,7 @@ class Option(property):
             self._logging_configuration = None
 
     """
+
     def __init__(self, fget=None, fset=None, fdel=None, doc=None, name=None,
                  default=None, require=None, validate=None):
         super(Option, self).__init__(fget, fset, fdel, doc)
@@ -129,7 +133,7 @@ class Option(property):
     def __call__(self, function):
         return self.getter(function)
 
-    #region Methods
+    # region Methods
 
     @classmethod
     def fix_up(cls, command):
@@ -147,24 +151,26 @@ class Option(property):
                 def new_getter(name):
                     def getter(self):
                         return getattr(self, name, None)
+
                     return getter
 
                 fget = new_getter(field_name)
                 fget = FunctionType(
-                    fget.func_code, fget.func_globals, member_name, None,
-                    fget.func_closure)
+                    fget.__code__, fget.__globals__, member_name, None,
+                    fget.__closure__)
                 fget = MethodType(fget, None, command)
                 option = option.getter(fget)
 
                 def new_setter(name):
                     def setter(self, value):
                         setattr(self, name, value)
+
                     return setter
 
                 fset = new_setter(field_name)
                 fset = FunctionType(
-                    fset.func_code, fset.func_globals, member_name, None,
-                    fset.func_closure)
+                    fset.__code__, fset.__globals__, member_name, None,
+                    fset.__closure__)
                 fset = MethodType(fset, None, command)
                 option = option.setter(fset)
 
@@ -175,7 +181,7 @@ class Option(property):
 
     def deleter(self, function):
         deleter = super(Option, self).deleter(function)
-        return self._reset(deleter, function)
+        return self._reset(deleter)
 
     def getter(self, function):
         getter = super(Option, self).getter(function)
@@ -193,9 +199,9 @@ class Option(property):
         other.validate = self.validate
         return other
 
-    #endregion
+    # endregion
 
-    #region Types
+    # region Types
 
     class Encoder(JSONEncoder):
         def __init__(self, item):
@@ -213,6 +219,7 @@ class Option(property):
         """ Presents an instance/class view over a search command `Option`.
 
         """
+
         def __init__(self, command, option):
             self._command = command
             self._option = option
@@ -227,7 +234,7 @@ class Option(property):
             text = '='.join([self.name, encoder.encode(value)])
             return text
 
-        #region Properties
+        # region Properties
 
         @property
         def is_required(self):
@@ -261,16 +268,16 @@ class Option(property):
             self._option.__set__(self._command, self._option.default)
             self._is_set = False
 
-        #endif
+            # endif
 
     class View(object):
         """ Presents a view of the set of `Option` arguments to a search command.
 
         """
+
         def __init__(self, command):
-            self._items = OrderedDict([
-                (option.name, Option.Item(command, option))
-                for member_name, option in type(command).option_definitions])
+            self._items = OrderedDict([(option.name, Option.Item(command, option)) for member_name, option in
+                                       type(command).option_definitions])
             return
 
         def __contains__(self, name):
@@ -297,28 +304,28 @@ class Option(property):
                 [str(item) for item in self.itervalues() if item.is_set])
             return text
 
-        #region Methods
+        # region Methods
 
         def get_missing(self):
             missing = [
-                item.name for item in self._items.itervalues()
+                item.name for item in six.itervalues(self._items)
                 if item.is_required and not item.is_set]
             return missing if len(missing) > 0 else None
 
         def iteritems(self):
-            return self._items.iteritems()
+            return six.iteritems(self._items)
 
         def iterkeys(self):
             return self.__iter__()
 
         def itervalues(self):
-            return self._items.itervalues()
+            return six.itervalues(self._items)
 
         def reset(self):
             for value in self.itervalues():
                 value.reset()
             return
 
-        #endif
+            # endif
 
-    #endif
+            # endif

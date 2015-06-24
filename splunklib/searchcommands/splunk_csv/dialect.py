@@ -24,4 +24,5 @@ class Dialect(csv.Dialect):
     lineterminator = '\r\n'
     quoting = csv.QUOTE_MINIMAL
 
+
 csv.register_dialect('splunklib.searchcommands', Dialect)

@@ -155,11 +155,11 @@ if sys.platform == 'win32':
     # is already open, thus this hack
     import msvcrt
     import os
+
     msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
 
 
-def dispatch(command_class, argv=sys.argv, input_file=sys.stdin, output_file=
-             sys.stdout, module_name=None):
+def dispatch(command_class, argv=sys.argv, input_file=sys.stdin, output_file=sys.stdout, module_name=None):
     """ Instantiates and executes a search command class
 
     This function implements a `conditional script stanza <http://goo.gl/OFaox6>`_

@@ -11,14 +11,19 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from future import standard_library
+# Fix python 2to3 function names
+standard_library.install_aliases()
 
-try:
-    from collections import OrderedDict  # Python 2.7
-except ImportError:
-    from ordereddict import OrderedDict  # Python 2.6
+import six
+from collections import OrderedDict
 
 import re
-import urllib2 as urllib
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
+
 
 
 class ConfigurationSettingsType(type):
@@ -93,13 +98,13 @@ class InputHeader(object):
         return self._settings.items()
 
     def iteritems(self):
-        return self._settings.iteritems()
+        return six.iteritems(self._settings)
 
     def iterkeys(self):
-        return self._settings.iterkeys()
+        return six.iterkeys(self._settings)
 
     def itervalues(self):
-        return self._settings.itervalues()
+        return six.itervalues(self._settings)
 
     def keys(self):
         return self._settings.keys()
@@ -118,7 +123,6 @@ class InputHeader(object):
 
         """
         key, value = None, None
-        import sys
         for line in input_file:
             if line == '\n':
                 break
@@ -128,10 +132,10 @@ class InputHeader(object):
             if len(item) == 2:
                 # start of a new item
                 self._update(key, value)
-                key, value = item[0], urllib.unquote(item[1])
+                key, value = item[0], unquote(item[1])
             elif key is not None:
                 # continuation of the current item
-                value = '\n'.join([value, urllib.unquote(line)])
+                value = '\n'.join([value, unquote(line)])
 
         self._update(key, value)
         return
@@ -167,8 +171,13 @@ class MessagesHeader(object):
     def __init__(self):
         self._messages = []
 
-    def __iadd__(self, (message_level, message_text)):
-        self._messages.append((message_level, message_text))
+    def __iadd__(self, message):
+        """
+        MessagesHeader() += MessagesHeader()
+        :param message: TUPLE (message_level, message_text)
+        :return: self
+        """
+        self._messages.append(message)
         return self
 
     def __iter__(self):
@@ -182,7 +191,7 @@ class MessagesHeader(object):
 
     def append(self, message_level, message_text):
         """ Adds a message level/text pair to this MessagesHeader """
-        if not message_level in MessagesHeader._message_levels:
+        if message_level not in MessagesHeader._message_levels:
             raise ValueError('message_level="%s"' % message_level)
         self._messages.append((message_level, message_text))
 
@@ -278,7 +287,7 @@ class SearchCommandParser(object):
         for option in SearchCommandParser._options_re.finditer(
                 command_args.group('options')):
             name, value = option.group(1), option.group(2)
-            if not name in command.options:
+            if name not in command.options:
                 raise ValueError('Unrecognized option: %s = %s' % (name, value))
             command.options[name].value = SearchCommandParser.unquote(value)
 

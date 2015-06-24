@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import print_function
 from distutils.core import setup, Command
 from contextlib import closing
 from fnmatch import fnmatch
@@ -61,7 +62,7 @@ class CoverageCommand(Command):
         try:
             import coverage
         except ImportError:
-            print "Could not import coverage. Please install it and try again."
+            print("Could not import coverage. Please install it and try again.")
             exit(1)
         cov = coverage.coverage(source=['splunklib'])
         cov.start()
@@ -227,5 +228,5 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
-    ],
+    ], requires=['coverage', 'six', 'future']
 )

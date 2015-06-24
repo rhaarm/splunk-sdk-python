@@ -13,21 +13,28 @@
 # under the License.
 
 from __future__ import absolute_import
+from future import standard_library
+# Fix python 2to3 function names
+standard_library.install_aliases()
 
+import six
 # Absolute imports
 
 from splunklib.client import Service
 
-try:
-    from collections import OrderedDict  # python 2.7
-except ImportError:
-    from ordereddict import OrderedDict  # python 2.6
+from collections import OrderedDict
 
-from logging import _levelNames, getLevelName
+from logging import getLevelName
+
+try:
+    from logging import _levelToName # Python 3
+except ImportError:
+    from logging import _levelNames as _levelToName # Python 2.7
+
 from inspect import getmembers
 from os import environ, path
 from sys import argv, exit, stdin, stdout
-from urlparse import urlsplit
+from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 # Relative imports
@@ -42,6 +49,8 @@ class SearchCommand(object):
     """ Represents a custom search command.
 
     """
+
+    name = None
 
     def __init__(self):
 
@@ -79,7 +88,7 @@ class SearchCommand(object):
         text = ' '.join([value for value in values if len(value) > 0])
         return text
 
-    #region Options
+    # region Options
 
     @Option
     def logging_configuration(self):
@@ -115,7 +124,7 @@ class SearchCommand(object):
             value = self._default_logging_level
         if type(value) is str:
             try:
-                level = _levelNames[value.upper()]
+                level = _levelToName[value.upper()]
             except KeyError:
                 raise ValueError('Unrecognized logging level: %s' % value)
         else:
@@ -136,7 +145,7 @@ class SearchCommand(object):
 
     # #endregion
 
-    #region Properties
+    # region Properties
 
     @property
     def configuration(self):
@@ -222,6 +231,7 @@ class SearchCommand(object):
         with open(info_path, 'rb') as f:
             from collections import namedtuple
             import csv
+
             reader = csv.reader(f, dialect='splunklib.searchcommands')
             fields = [convert_field(x) for x in reader.next()]
             values = [convert_value(f, v) for f, v in zip(fields, reader.next())]
@@ -270,9 +280,9 @@ class SearchCommand(object):
 
         return self._service
 
-    #endregion
+    # endregion
 
-    #region Methods
+    # region Methods
 
     def error_exit(self, error):
         self.logger.error('Abnormal exit: ' + error)
@@ -294,23 +304,23 @@ class SearchCommand(object):
         try:
             if len(args) >= 2 and args[1] == '__GETINFO__':
 
-                ConfigurationSettings, operation, args, reader = self._prepare(args, input_file=None)
+                configurationsettings, operation, args, reader = self._prepare(args, input_file=None)
                 self.parser.parse(args, self)
-                self._configuration = ConfigurationSettings(self)
+                self._configuration = configurationsettings(self)
                 writer = splunk_csv.DictWriter(output_file, self, self.configuration.keys(), mv_delimiter=',')
                 writer.writerow(self.configuration.items())
 
             elif len(args) >= 2 and args[1] == '__EXECUTE__':
 
                 self.input_header.read(input_file)
-                ConfigurationSettings, operation, args, reader = self._prepare(args, input_file)
+                configurationsettings, operation, args, reader = self._prepare(args, input_file)
                 self.parser.parse(args, self)
-                self._configuration = ConfigurationSettings(self)
+                self._configuration = configurationsettings(self)
 
                 if self.show_configuration:
                     self.messages.append(
                         'info_message', '%s command configuration settings: %s'
-                        % (self.name, self._configuration))
+                                        % (self.name, self._configuration))
 
                 writer = splunk_csv.DictWriter(output_file, self)
                 self._execute(operation, reader, writer)
@@ -386,14 +396,15 @@ class SearchCommand(object):
 
     def _write_message(self, message_type, message_text, *args):
         import csv
+
         if len(args) > 0:
             message_text = message_text % args
         writer = csv.writer(self._output_file)
         writer.writerows([[], [message_type], [message_text]])
 
-    #endregion
+    # endregion
 
-    #region Types
+    # region Types
 
     class ConfigurationSettings(object):
         """ Represents the configuration settings common to all
@@ -417,7 +428,7 @@ class SearchCommand(object):
                 ['%s=%s' % (k, getattr(self, k)) for k in self.keys()])
             return text
 
-        #region Properties
+        # region Properties
 
         # Constant configuration settings
 
@@ -498,7 +509,6 @@ class SearchCommand(object):
 
         _needs_empty_results = True
 
-
         @property
         def outputheader(self):
             """ Signals that the output of this command is a messages header
@@ -520,7 +530,6 @@ class SearchCommand(object):
             return type(self)._passauth
 
         _passauth = False
-
 
         @property
         def perf_warn_limit(self):
@@ -613,7 +622,7 @@ class SearchCommand(object):
 
             """
             fieldnames = set(self.command.fieldnames)
-            for name, option in self.command.options.iteritems():
+            for name, option in six.iteritems(self.command.options):
                 if isinstance(option.validator, Fieldname):
                     value = option.value
                     if value is not None:
@@ -621,9 +630,9 @@ class SearchCommand(object):
             text = ','.join(fieldnames)
             return text
 
-        #endregion
+        # endregion
 
-        #region Methods
+        # region Methods
 
         @classmethod
         def configuration_settings(cls):
@@ -686,12 +695,12 @@ class SearchCommand(object):
             """
             return sorted(type(self).configuration_settings().keys())
 
-        #endregion
+        # endregion
 
-        #region Variables
+        # region Variables
 
         _settings = None
 
-        #endregion
+        # endregion
 
-        #endregion
+        # endregion
