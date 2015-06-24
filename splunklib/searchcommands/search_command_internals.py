@@ -19,11 +19,11 @@ import six
 from collections import OrderedDict
 
 import re
+
 try:
     from urllib.parse import unquote
 except ImportError:
     from urllib import unquote
-
 
 
 class ConfigurationSettingsType(type):
@@ -49,6 +49,7 @@ class ConfigurationSettingsType(type):
       if there is one.
 
     """
+
     def __new__(cls, module, name, bases, settings):
         cls = super(ConfigurationSettingsType, cls).__new__(
             cls, name, bases, {})
@@ -59,7 +60,7 @@ class ConfigurationSettingsType(type):
         super(ConfigurationSettingsType, cls).__init__(name, bases, None)
         configuration_settings = cls.configuration_settings()
 
-        for name, value in settings.iteritems():
+        for name, value in six.iteritems(settings):
             try:
                 prop, backing_field = configuration_settings[name]
             except KeyError:
@@ -78,6 +79,7 @@ class InputHeader(object):
     """ Represents a Splunk input header as a collection of name/value pairs.
 
     """
+
     def __init__(self):
         self._settings = OrderedDict()
 
@@ -246,6 +248,7 @@ class SearchCommandParser(object):
     setting the built-in `log_level` immediately changes the `log_level`.
 
     """
+
     def parse(self, argv, command):
         """ Splits an argument list into an options dictionary and a fieldname
         list.
@@ -350,7 +353,7 @@ class SearchCommandParser(object):
         result = re.sub(cls._escaped_quote_re, replace, string[1:-1])
         return result
 
-    #region Class variables
+    # region Class variables
 
     _arguments_re = re.compile(r"""
         ^\s*
@@ -379,4 +382,4 @@ class SearchCommandParser(object):
         ([^\s"]+|"(?:[^"]+|""|\\")*")  # value
         """, re.VERBOSE)
 
-    #endregion
+    # endregion
