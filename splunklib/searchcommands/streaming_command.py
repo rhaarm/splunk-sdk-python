@@ -14,7 +14,7 @@
 
 from __future__ import absolute_import
 
-from . search_command import SearchCommand
+from .search_command import SearchCommand
 from . import splunk_csv
 
 
@@ -59,7 +59,7 @@ class StreamingCommand(SearchCommand):
         messages header associated with this command invocation.
 
     """
-    #region Methods
+    # region Methods
 
     def stream(self, records):
         """ Generator function that processes and yields event records to the
@@ -75,22 +75,22 @@ class StreamingCommand(SearchCommand):
             writer.writerow(record)
 
     def _prepare(self, argv, input_file):
-        ConfigurationSettings = type(self).ConfigurationSettings
+        configurationsettings = type(self).ConfigurationSettings
         argv = argv[2:]
         if input_file is None:
             reader = None
         else:
             reader = splunk_csv.DictReader(input_file)
-        return ConfigurationSettings, self.stream, argv, reader
+        return configurationsettings, self.stream, argv, reader
 
-    #endregion
+    # endregion
 
     class ConfigurationSettings(SearchCommand.ConfigurationSettings):
         """ Represents the configuration settings that apply to a
         :code:`StreamingCommand`.
 
         """
-        #region Properties
+        # region Properties
 
         @property
         def local(self):
@@ -143,9 +143,9 @@ class StreamingCommand(SearchCommand):
             """
             return True
 
-        #endregion
+        # endregion
 
-        #region Methods
+        # region Methods
 
         @classmethod
         def fix_up(cls, command):
@@ -156,4 +156,4 @@ class StreamingCommand(SearchCommand):
                 raise AttributeError('No StreamingCommand.stream override')
             return
 
-        #endregion
+            # endregion

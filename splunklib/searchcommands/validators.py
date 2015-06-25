@@ -16,11 +16,11 @@
 
 from __future__ import absolute_import
 
-from cStringIO import StringIO
+from past.builtins import long
+from io import StringIO
 import csv
 import os
 import re
-import sys
 
 
 class Validator(object):
@@ -35,6 +35,7 @@ class Validator(object):
     it receives as argument the same way :code:`str` does.
 
     """
+
     def __call__(self, value):
         raise NotImplementedError()
 
@@ -86,6 +87,7 @@ class File(Validator):
     """ Validates file option values.
 
     """
+
     def __init__(self, mode='r', buffering=-1):
         self.mode = mode
         self.buffering = buffering
@@ -114,6 +116,7 @@ class Integer(Validator):
     """ Validates integer option values.
 
     """
+
     def __init__(self, minimum=None, maximum=None):
         if minimum is not None and maximum is not None:
             def check_range(value):
@@ -151,6 +154,7 @@ class Duration(Validator):
     """ Validates duration option values.
 
     """
+
     def __call__(self, value):
 
         if value is None:
@@ -189,6 +193,7 @@ class List(Validator):
     """ Validates a list of strings
 
     """
+
     class Dialect(csv.Dialect):
         """ Describes the properties of list option values. """
         delimiter = ','
@@ -218,6 +223,10 @@ class OptionName(Validator):
     """ Validates option names.
 
     """
+
+    def format(self, value):
+        pass
+
     pattern = re.compile(r'''[a-zA-Z][_a-zA-Z0-9]*$''')
 
     def __call__(self, value):
@@ -231,6 +240,7 @@ class RegularExpression(Validator):
     """ Validates regular expression option values.
 
     """
+
     def __call__(self, value):
         value = str(value)
         try:
@@ -247,6 +257,7 @@ class Set(Validator):
     """ Validates set option values.
 
     """
+
     def __init__(self, *args):
         self.membership = args
 

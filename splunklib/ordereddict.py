@@ -19,25 +19,26 @@
 #     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #     OTHER DEALINGS IN THE SOFTWARE.
-
-from UserDict import DictMixin
+try:
+    from UserDict import DictMixin
+except ImportError:
+    from collections import MutableMapping as DictMixin
 
 
 class OrderedDict(dict, DictMixin):
-
-    def __init__(self, *args, **kwds):
+    def __init__(self, *args, **kwargs):
         if len(args) > 1:
             raise TypeError('expected at most 1 arguments, got %d' % len(args))
         try:
             self.__end
         except AttributeError:
             self.clear()
-        self.update(*args, **kwds)
+        self.update(*args, **kwargs)
 
     def clear(self):
         self.__end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.__map = {}                 # key --> [key, prev, next]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.__map = {}  # key --> [key, prev, next]
         dict.clear(self)
 
     def __setitem__(self, key, value):
@@ -95,9 +96,18 @@ class OrderedDict(dict, DictMixin):
     pop = DictMixin.pop
     values = DictMixin.values
     items = DictMixin.items
-    iterkeys = DictMixin.iterkeys
-    itervalues = DictMixin.itervalues
-    iteritems = DictMixin.iteritems
+
+    # stripped from Python 2.7 Dictmixin
+    def iteritems(self):
+        for k in self:
+            yield (k, self[k])
+
+    def iterkeys(self):
+        return self.__iter__()
+
+    def itervalues(self):
+        for _, v in self.iteritems():
+            yield v
 
     def __repr__(self):
         if not self:
@@ -118,7 +128,7 @@ class OrderedDict(dict, DictMixin):
         if isinstance(other, OrderedDict):
             if len(self) != len(other):
                 return False
-            for p, q in  zip(self.items(), other.items()):
+            for p, q in zip(self.items(), other.items()):
                 if p != q:
                     return False
             return True

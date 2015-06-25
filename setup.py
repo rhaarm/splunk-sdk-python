@@ -228,5 +228,5 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Libraries :: Application Frameworks",
-    ], requires=['coverage', 'six', 'future']
+    ], requires=['six', 'future']
 )

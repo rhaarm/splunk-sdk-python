@@ -34,23 +34,21 @@ as follows:::
 
 try:
     import xml.etree.cElementTree as et
-except:
+except ImportError:
     import xml.etree.ElementTree as et
 
 try:
     from collections import OrderedDict
-except:
-    from ordereddict import OrderedDict
+except ImportError:
+    from .ordereddict import OrderedDict
 
-try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+from io import StringIO
 
 __all__ = [
     "ResultsReader",
     "Message"
 ]
+
 
 class Message(object):
     """This class represents informational messages that Splunk interleaves in the results stream.
@@ -62,6 +60,7 @@ class Message(object):
 
         m = Message("DEBUG", "There's something in that variable...")
     """
+
     def __init__(self, type_, message):
         self.type = type_
         self.message = message
@@ -75,6 +74,7 @@ class Message(object):
     def __hash__(self):
         return hash((self.type, self.message))
 
+
 class _ConcatenatedStream(object):
     """Lazily concatenate zero or more streams into a stream.
 
@@ -87,6 +87,7 @@ class _ConcatenatedStream(object):
         s = _ConcatenatedStream(StringIO("abc"), StringIO("def"))
         assert s.read() == "abcdef"
     """
+
     def __init__(self, *streams):
         self.streams = list(streams)
 
@@ -105,6 +106,7 @@ class _ConcatenatedStream(object):
                 del self.streams[0]
         return response
 
+
 class _XMLDTDFilter(object):
     """Lazily remove all XML DTDs from a stream.
 
@@ -118,6 +120,7 @@ class _XMLDTDFilter(object):
         s = _XMLDTDFilter("<?xml abcd><element><?xml ...></element>")
         assert s.read() == "<element></element>"
     """
+
     def __init__(self, stream):
         self.stream = stream
 
@@ -147,6 +150,7 @@ class _XMLDTDFilter(object):
                 if n is not None:
                     n -= 1
         return response
+
 
 class ResultsReader(object):
     """This class returns dictionaries and Splunk messages from an XML results
@@ -264,7 +268,3 @@ class ResultsReader(object):
                 return
             else:
                 raise
-
-
-
-

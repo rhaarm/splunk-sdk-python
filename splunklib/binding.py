@@ -23,24 +23,30 @@ to the user.
 If you want a friendlier interface to the Splunk REST API, use the
 :mod:`splunklib.client` module.
 """
+from __future__ import absolute_import
+# Python 2 & 3 compatibility
+from future import standard_library
+import six
 
-import httplib
+standard_library.install_aliases()
+
+import http.client
 import logging
 import socket
 import ssl
-import urllib
+import urllib.parse as urllib
 import io
 import sys
 
 from datetime import datetime
 from functools import wraps
-from StringIO import StringIO
+from io import StringIO
 
 from contextlib import contextmanager
 
 from xml.etree.ElementTree import XML
 
-from data import record
+from .data import record
 
 __all__ = [
     "AuthenticationError",
@@ -56,14 +62,16 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = "8089"
 DEFAULT_SCHEME = "https"
 
+
 def _log_duration(f):
     @wraps(f)
     def new_f(*args, **kwargs):
         start_time = datetime.now()
         val = f(*args, **kwargs)
         end_time = datetime.now()
-        logging.debug("Operation took %s", end_time-start_time)
+        logging.debug("Operation took %s", end_time - start_time)
         return val
+
     return new_f
 
 
@@ -116,6 +124,7 @@ class UrlEncoded(str):
         UrlEncoded('ab c') + 'de f' == UrlEncoded('ab cde f')
         'ab c' + UrlEncoded('de f') == UrlEncoded('ab cde f')
     """
+
     def __new__(self, val='', skip_encode=False, encode_slash=False):
         if isinstance(val, UrlEncoded):
             # Don't urllib.quote something already URL encoded.
@@ -159,8 +168,10 @@ class UrlEncoded(str):
         ``TypeError``.
         """
         raise TypeError("Cannot interpolate into a UrlEncoded object.")
+
     def __repr__(self):
         return "UrlEncoded(%s)" % repr(urllib.unquote(str(self)))
+
 
 @contextmanager
 def _handle_auth_error(msg):
@@ -187,6 +198,7 @@ def _handle_auth_error(msg):
             raise AuthenticationError(msg, he)
         else:
             raise
+
 
 def _authentication(request_fun):
     """Decorator to handle autologin and authentication errors.
@@ -222,6 +234,7 @@ def _authentication(request_fun):
             return 42
         print _authentication(f)
     """
+
     @wraps(request_fun)
     def wrapper(self, *args, **kwargs):
         if self.token is _NoAuthenticationToken:
@@ -303,6 +316,7 @@ def _authority(scheme=DEFAULT_SCHEME, host=DEFAULT_HOST, port=DEFAULT_PORT):
         host = '[' + host + ']'
     return UrlEncoded("%s://%s:%s" % (scheme, host, port), skip_encode=True)
 
+
 # kwargs: sharing, owner, app
 def namespace(sharing=None, owner=None, app=None, **kwargs):
     """This function constructs a Splunk namespace.
@@ -356,7 +370,7 @@ def namespace(sharing=None, owner=None, app=None, **kwargs):
         n = binding.namespace(sharing="global", app="search")
     """
     if sharing in ["system"]:
-        return record({'sharing': sharing, 'owner': "nobody", 'app': "system" })
+        return record({'sharing': sharing, 'owner': "nobody", 'app': "system"})
     if sharing in ["global", "app"]:
         return record({'sharing': sharing, 'owner': "nobody", 'app': app})
     if sharing in ["user", None]:
@@ -408,10 +422,11 @@ class Context(object):
         # Of if you already have a session token
         c = binding.Context(token="atg232342aa34324a")
     """
+
     def __init__(self, handler=None, **kwargs):
         self.http = HttpLib(handler)
         self.token = kwargs.get("token", _NoAuthenticationToken)
-        if self.token is None: # In case someone explicitly passes token=None
+        if self.token is None:  # In case someone explicitly passes token=None
             self.token = _NoAuthenticationToken
         self.scheme = kwargs.get("scheme", DEFAULT_SCHEME)
         self.host = kwargs.get("host", DEFAULT_HOST)
@@ -719,15 +734,15 @@ class Context(object):
             headers = []
 
         path = self.authority \
-            + self._abspath(path_segment, owner=owner,
-                            app=app, sharing=sharing)
+               + self._abspath(path_segment, owner=owner,
+                               app=app, sharing=sharing)
         all_headers = headers + self._auth_headers
         logging.debug("%s request to %s (headers: %s, body: %s)",
                       method, path, str(all_headers), repr(body))
         response = self.http.request(path,
                                      {'method': method,
-                                     'headers': all_headers,
-                                     'body': body})
+                                      'headers': all_headers,
+                                      'body': body})
         return response
 
     def login(self):
@@ -776,7 +791,7 @@ class Context(object):
         return self
 
     def _abspath(self, path_segment,
-                owner=None, app=None, sharing=None):
+                 owner=None, app=None, sharing=None):
         """Qualifies *path_segment* into an absolute path for a URL.
 
         If *path_segment* is already absolute, returns it unchanged.
@@ -879,11 +894,13 @@ def connect(**kwargs):
     c.login()
     return c
 
+
 # Note: the error response schema supports multiple messages but we only
 # return the first, although we do return the body so that an exception
 # handler that wants to read multiple messages can do so.
 class HTTPError(Exception):
     """This exception is raised for HTTP responses that return an error."""
+
     def __init__(self, response, _message=None):
         status = response.status
         reason = response.reason
@@ -898,6 +915,7 @@ class HTTPError(Exception):
         self.body = body
         self._response = response
 
+
 class AuthenticationError(HTTPError):
     """Raised when a login request to Splunk fails.
 
@@ -905,12 +923,14 @@ class AuthenticationError(HTTPError):
     in a call to :meth:`Context.login` or :meth:`splunklib.client.Service.login`,
     this exception is raised.
     """
+
     def __init__(self, message, cause):
         # Put the body back in the response so that HTTPError's constructor can
         # read it again.
         cause._response.body = StringIO(cause.body)
 
         HTTPError.__init__(self, cause._response, message)
+
 
 #
 # The HTTP interface used by the Splunk binding layer abstracts the underlying
@@ -939,12 +959,13 @@ class AuthenticationError(HTTPError):
 # 'foo=1&foo=2&foo=3'.
 def _encode(**kwargs):
     items = []
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         if isinstance(value, list):
             items.extend([(key, item) for item in value])
         else:
             items.append((key, value))
     return urllib.urlencode(items)
+
 
 # Crack the given url into (scheme, host, port, path)
 def _spliturl(url):
@@ -955,6 +976,7 @@ def _spliturl(url):
     if host.startswith('[') and host.endswith(']'): host = host[1:-1]
     if port is None: port = DEFAULT_PORT
     return scheme, host, port, path
+
 
 # Given an HTTP request handler, this wrapper objects provides a related
 # family of convenience methods built using that handler.
@@ -998,6 +1020,7 @@ class HttpLib(object):
     no further processing. By default, ``HttpLib`` calls the :func:`handler` function
     to get a handler function.
     """
+
     def __init__(self, custom_handler=None):
         self.handler = handler() if custom_handler is None else custom_handler
 
@@ -1018,7 +1041,8 @@ class HttpLib(object):
             its structure).
         :rtype: ``dict``
         """
-        if headers is None: headers = []
+        if headers is None:
+            headers = []
         if kwargs:
             # url is already a UrlEncoded. We have to manually declare
             # the query to be encoded or it will get automatically URL
@@ -1047,13 +1071,14 @@ class HttpLib(object):
             its structure).
         :rtype: ``dict``
         """
-        if headers is None: headers = []
+        if headers is None:
+            headers = []
         if kwargs:
             # url is already a UrlEncoded. We have to manually declare
             # the query to be encoded or it will get automatically URL
             # encoded by being appended to url.
             url = url + UrlEncoded('?' + _encode(**kwargs), skip_encode=True)
-        return self.request(url, { 'method': "GET", 'headers': headers })
+        return self.request(url, {'method': "GET", 'headers': headers})
 
     def post(self, url, headers=None, **kwargs):
         """Sends a POST request to a URL.
@@ -1073,7 +1098,8 @@ class HttpLib(object):
             its structure).
         :rtype: ``dict``
         """
-        if headers is None: headers = []
+        if headers is None:
+            headers = []
         headers.append(("Content-Type", "application/x-www-form-urlencoded")),
         # We handle GET-style arguments and an unstructured body. This is here
         # to support the receivers/stream endpoint.
@@ -1152,7 +1178,7 @@ class ResponseReader(io.RawIOBase):
         """Closes this response."""
         self._response.close()
 
-    def read(self, size = None):
+    def read(self, size=None):
         """Reads a given number of characters from the response.
 
         :param size: The number of characters to read, or "None" to read the
@@ -1199,17 +1225,18 @@ def handler(key_file=None, cert_file=None, timeout=None):
 
     def connect(scheme, host, port):
         kwargs = {}
-        if timeout is not None: kwargs['timeout'] = timeout
+        if timeout is not None:
+            kwargs['timeout'] = timeout
         if scheme == "http":
-            return httplib.HTTPConnection(host, port, **kwargs)
+            return http.client.HTTPConnection(host, port, **kwargs)
         if scheme == "https":
             if key_file is not None: kwargs['key_file'] = key_file
             if cert_file is not None: kwargs['cert_file'] = cert_file
 
             # If running Python 2.7.9+, disable SSL certificate validation
-            if sys.version_info >= (2,7,9) and key_file is None and cert_file is None:
+            if sys.version_info >= (2, 7, 9) and key_file is None and cert_file is None:
                 kwargs['context'] = ssl._create_unverified_context()
-            return httplib.HTTPSConnection(host, port, **kwargs)
+            return http.client.HTTPSConnection(host, port, **kwargs)
         raise ValueError("unsupported scheme: %s" % scheme)
 
     def request(url, message, **kwargs):
@@ -1220,7 +1247,7 @@ def handler(key_file=None, cert_file=None, timeout=None):
             "Host": host,
             "User-Agent": "splunk-sdk-python/0.1",
             "Accept": "*/*",
-        } # defaults
+        }  # defaults
         for key, value in message["headers"]:
             head[key] = value
         method = message.get("method", "GET")

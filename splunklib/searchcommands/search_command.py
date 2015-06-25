@@ -12,13 +12,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# Absolute imports
 from __future__ import absolute_import
 from future import standard_library
 # Fix python 2to3 function names
 standard_library.install_aliases()
-
 import six
-# Absolute imports
 
 from splunklib.client import Service
 
@@ -27,9 +26,9 @@ from collections import OrderedDict
 from logging import getLevelName
 
 try:
-    from logging import _levelToName # Python 3
+    from logging import _levelToName  # Python 3
 except ImportError:
-    from logging import _levelNames as _levelToName # Python 2.7
+    from logging import _levelNames as _levelToName  # Python 2.7
 
 from inspect import getmembers
 from os import environ, path
@@ -49,8 +48,12 @@ class SearchCommand(object):
     """ Represents a custom search command.
 
     """
-
-    name = None
+    _configuration = None
+    _fieldnames = None
+    _option_view = None
+    _output_file = None
+    _search_results_info = None
+    _service = None
 
     def __init__(self):
 
@@ -71,12 +74,6 @@ class SearchCommand(object):
         # Variables backing option/property values
 
         self._default_logging_level = self.logger.level
-        self._configuration = None
-        self._fieldnames = None
-        self._option_view = None
-        self._output_file = None
-        self._search_results_info = None
-        self._service = None
 
         self.parser = SearchCommandParser()
 
@@ -84,7 +81,7 @@ class SearchCommand(object):
         return str(self)
 
     def __str__(self):
-        values = [type(self).name, str(self.options)] + self.fieldnames
+        values = [type(self).__name__, str(self.options)] + self.fieldnames
         text = ' '.join([value for value in values if len(value) > 0])
         return text
 

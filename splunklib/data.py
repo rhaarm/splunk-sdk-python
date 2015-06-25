@@ -15,8 +15,8 @@
 """The **splunklib.data** module reads the responses from splunkd in Atom Feed 
 format, which is the format used by most of the REST API.
 """
-
 from xml.etree.ElementTree import XML
+import six
 
 __all__ = ["load"]
 
@@ -39,21 +39,27 @@ XNAME_LIST = XNAMEF_REST % LNAME_LIST
 def isdict(name):
     return name == XNAME_DICT or name == LNAME_DICT
 
+
 def isitem(name):
     return name == XNAME_ITEM or name == LNAME_ITEM
+
 
 def iskey(name):
     return name == XNAME_KEY or name == LNAME_KEY
 
+
 def islist(name):
     return name == XNAME_LIST or name == LNAME_LIST
+
 
 def hasattrs(element):
     return len(element.attrib) > 0
 
+
 def localname(xname):
     rcurly = xname.find('}')
-    return xname if rcurly == -1 else xname[rcurly+1:]
+    return xname if rcurly == -1 else xname[rcurly + 1:]
+
 
 def load(text, match=None):
     """This function reads a string that contains the XML of an Atom Feed, then 
@@ -77,23 +83,26 @@ def load(text, match=None):
     root = XML(text)
     items = [root] if match is None else root.findall(match)
     count = len(items)
-    if count == 0: 
+    if count == 0:
         return None
-    elif count == 1: 
+    elif count == 1:
         return load_root(items[0], nametable)
     else:
         return [load_root(item, nametable) for item in items]
 
+
 # Load the attributes of the given element.
 def load_attrs(element):
-    if not hasattrs(element): return None
+    if not hasattrs(element):
+        return None
     attrs = record()
-    for key, value in element.attrib.iteritems(): 
+    for key, value in six.iteritems(element.attrib):
         attrs[key] = value
     return attrs
 
+
 # Parse a <dict> element and return a Python dict
-def load_dict(element, nametable = None):
+def load_dict(element, nametable=None):
     value = record()
     children = list(element)
     for child in children:
@@ -101,6 +110,7 @@ def load_dict(element, nametable = None):
         name = child.attrib["name"]
         value[name] = load_value(child, nametable)
     return value
+
 
 # Loads the given elements attrs & value into single merged dict.
 def load_elem(element, nametable=None):
@@ -115,7 +125,7 @@ def load_elem(element, nametable=None):
         return name, attrs
     # Both attrs & value are complex, so merge the two dicts, resolving collisions.
     collision_keys = []
-    for key, val in attrs.iteritems():
+    for key, val in six.iteritems(attrs):
         if key in value and key in collision_keys:
             value[key].append(val)
         elif key in value and key not in collision_keys:
@@ -124,6 +134,7 @@ def load_elem(element, nametable=None):
         else:
             value[key] = val
     return name, value
+
 
 # Parse a <list> element and return a Python list
 def load_list(element, nametable=None):
@@ -135,13 +146,17 @@ def load_list(element, nametable=None):
         value.append(load_value(child, nametable))
     return value
 
+
 # Load the given root element.
 def load_root(element, nametable=None):
     tag = element.tag
-    if isdict(tag): return load_dict(element, nametable)
-    if islist(tag): return load_list(element, nametable)
+    if isdict(tag):
+        return load_dict(element, nametable)
+    if islist(tag):
+        return load_list(element, nametable)
     k, v = load_elem(element, nametable)
     return Record.fromkv(k, v)
+
 
 # Load the children of the given element.
 def load_value(element, nametable=None):
@@ -151,10 +166,10 @@ def load_value(element, nametable=None):
     # No children, assume a simple text value
     if count == 0:
         text = element.text
-        if text is None: 
+        if text is None:
             return None
         text = text.strip()
-        if len(text) == 0: 
+        if len(text) == 0:
             return None
         return text
 
@@ -162,8 +177,10 @@ def load_value(element, nametable=None):
     if count == 1:
         child = children[0]
         tag = child.tag
-        if isdict(tag): return load_dict(child, nametable)
-        if islist(tag): return load_list(child, nametable)
+        if isdict(tag):
+            return load_dict(child, nametable)
+        if islist(tag):
+            return load_list(child, nametable)
 
     value = record()
     for child in children:
@@ -171,13 +188,14 @@ def load_value(element, nametable=None):
         # If we have seen this name before, promote the value to a list
         if value.has_key(name):
             current = value[name]
-            if not isinstance(current, list): 
+            if not isinstance(current, list):
                 value[name] = [current]
             value[name].append(item)
         else:
             value[name] = item
 
     return value
+
 
 # A generic utility that enables "dot" access to dicts
 class Record(dict):
@@ -201,13 +219,14 @@ class Record(dict):
     sep = '.'
 
     def __call__(self, *args):
-        if len(args) == 0: return self
+        if len(args) == 0:
+            return self
         return Record((key, self[key]) for key in args)
 
     def __getattr__(self, name):
         try:
             return self[name]
-        except KeyError: 
+        except KeyError:
             raise AttributeError(name)
 
     def __delattr__(self, name):
@@ -227,7 +246,7 @@ class Record(dict):
             return dict.__getitem__(self, key)
         key += self.sep
         result = record()
-        for k,v in self.iteritems():
+        for k, v in six.iteritems(self):
             if not k.startswith(key):
                 continue
             suffix = k[len(key):]
@@ -244,9 +263,9 @@ class Record(dict):
         if len(result) == 0:
             raise KeyError("No key or prefix: %s" % key)
         return result
-    
 
-def record(value=None): 
+
+def record(value=None):
     """This function returns a :class:`Record` instance constructed with an 
     initial value that you provide.
     
@@ -255,4 +274,3 @@ def record(value=None):
     """
     if value is None: value = {}
     return Record(value)
-
