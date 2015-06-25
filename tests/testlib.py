@@ -16,15 +16,20 @@
 
 """Shared unit test utilities."""
 import contextlib
-
 import sys
+import os
+import time
+from datetime import datetime, timedelta
+
 # Run the test suite on the SDK without installing it.
-sys.path.insert(0, '../')
-sys.path.insert(0, '../examples')
+import six
+
+splunk_sdk_path = os.path.join(os.path.dirname(__file__), "..")
+sys.path.insert(0, splunk_sdk_path)
+sys.path.insert(0, os.path.join(splunk_sdk_path, '../examples'))
 
 import splunklib.client as client
-from time import sleep
-from datetime import datetime, timedelta
+
 try:
     import unittest2 as unittest
 except ImportError:
@@ -36,20 +41,21 @@ except ImportError:
     raise Exception("Add the SDK repository to your PYTHONPATH to run the examples "
                     "(e.g., export PYTHONPATH=~/splunk-sdk-python.")
 
-import os
-import time
-
 import logging
+
 logging.basicConfig(
     filename='test.log',
     level=logging.DEBUG,
     format="%(asctime)s:%(levelname)s:%(message)s")
 
+
 class NoRestartRequiredError(Exception):
     pass
 
+
 class WaitTimedOutError(Exception):
     pass
+
 
 def to_bool(x):
     if x == '1':
@@ -61,7 +67,7 @@ def to_bool(x):
 
 
 def tmpname():
-    name = 'delete-me-' + str(os.getpid()) + str(time.time()).replace('.','-')
+    name = 'delete-me-' + str(os.getpid()) + str(time.time()).replace('.', '-')
     return name
 
 
@@ -73,8 +79,8 @@ def wait(predicate, timeout=60, pause_time=0.5):
         if datetime.now() - start > diff:
             logging.debug("wait timed out after %d seconds", timeout)
             raise WaitTimedOutError
-        sleep(pause_time)
-        logging.debug("wait finished after %s seconds", datetime.now()-start)
+        time.sleep(pause_time)
+        logging.debug("wait finished after %s seconds", datetime.now() - start)
 
 
 class SDKTestCase(unittest.TestCase):
@@ -90,11 +96,11 @@ class SDKTestCase(unittest.TestCase):
             if datetime.now() - start > diff:
                 logging.debug("wait timed out after %d seconds", timeout)
                 self.fail(timeout_message)
-            sleep(pause_time)
-            logging.debug("wait finished after %s seconds", datetime.now()-start)
+            time.sleep(pause_time)
+            logging.debug("wait finished after %s seconds", datetime.now() - start)
 
     def check_content(self, entity, **kwargs):
-        for k, v in kwargs.iteritems(): 
+        for k, v in six.iteritems(kwargs):
             self.assertEqual(entity[k], str(v))
 
     def check_entity(self, entity):
@@ -160,12 +166,11 @@ class SDKTestCase(unittest.TestCase):
         finally:
             self.service._splunk_version = original_version
 
-
     def install_app_from_collection(self, name):
         collectionName = 'sdk-app-collection'
         if collectionName not in self.service.apps:
             raise ValueError("sdk-test-application not installed in splunkd")
-        appPath = self.pathInApp(collectionName, ["build", name+".tar"])
+        appPath = self.pathInApp(collectionName, ["build", name + ".tar"])
         kwargs = {"update": 1, "name": appPath}
         try:
             self.service.post("apps/appinstall", **kwargs)

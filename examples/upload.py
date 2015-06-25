@@ -16,8 +16,9 @@
 
 """A command line utility that uploads a file to Splunk for indexing."""
 
-from os import path
-import sys, os
+import sys
+import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import splunklib.client as client
 
@@ -55,6 +56,7 @@ RULES = {
     }
 }
 
+
 def main(argv):
     usage = 'usage: %prog [options] <filename>*'
     opts = parse(argv, RULES, ".splunkrc", usage=usage)
@@ -67,16 +69,16 @@ def main(argv):
         error("Index '%s' does not exist." % name, 2)
     index = service.indexes[name]
 
-    kwargs_submit = dslice(opts.kwargs, 
-        {'eventhost': "host"}, 'source', 'host_regex',
-        'host_segment', 'rename-source', 'sourcetype')
+    kwargs_submit = dslice(opts.kwargs,
+                           {'eventhost': "host"}, 'source', 'host_regex',
+                           'host_segment', 'rename-source', 'sourcetype')
 
-    for arg in opts.args: 
-        fullpath = path.abspath(arg)
-        if not path.exists(fullpath):
+    for arg in opts.args:
+        fullpath = os.path.abspath(arg)
+        if not os.path.exists(fullpath):
             error("File '%s' does not exist" % arg, 2)
         index.upload(fullpath, **kwargs_submit)
 
+
 if __name__ == "__main__":
     main(sys.argv[1:])
-
