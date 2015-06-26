@@ -42,7 +42,7 @@ try:
 except ImportError:
     from .ordereddict import OrderedDict
 
-from io import StringIO
+from io import StringIO, BytesIO
 
 __all__ = [
     "ResultsReader",
@@ -84,7 +84,7 @@ class _ConcatenatedStream(object):
     **Example**::
 
         from StringIO import StringIO
-        s = _ConcatenatedStream(StringIO("abc"), StringIO("def"))
+        s = _ConcatenatedStream(BytesIO("abc"), BytesIO("def"))
         assert s.read() == "abcdef"
     """
 
@@ -198,7 +198,7 @@ class ResultsReader(object):
         # we remove all the DTD definitions inline, then wrap the
         # fragments in a fiction <doc> element to make the parser happy.
         stream = _XMLDTDFilter(stream)
-        stream = _ConcatenatedStream(StringIO("<doc>"), stream, StringIO("</doc>"))
+        stream = _ConcatenatedStream(BytesIO("<doc>"), stream, BytesIO("</doc>"))
         self.is_preview = None
         self._gen = self._parse_results(stream)
 

@@ -17,6 +17,7 @@
 """Runs all the Splunk SDK for Python unit tests."""
 
 import os
+
 try:
     import unittest2 as unittest
 except ImportError:

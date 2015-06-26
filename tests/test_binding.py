@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 from future import standard_library
+import six
 
 standard_library.install_aliases()
 
@@ -568,7 +569,7 @@ class TestNamespace(unittest.TestCase):
 
         for kwargs, expected in tests:
             namespace = binding.namespace(**kwargs)
-            for k, v in expected.iteritems():
+            for k, v in six.iteritems(expected):
                 self.assertEqual(namespace[k], v)
 
     def test_namespace_fails(self):

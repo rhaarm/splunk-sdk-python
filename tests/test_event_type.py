@@ -19,10 +19,12 @@ import logging
 
 import splunklib.client as client
 
+
 class TestRead(testlib.SDKTestCase):
     def test_read(self):
         for event_type in self.service.event_types.list(count=1):
             self.check_entity(event_type)
+
 
 class TestCreate(testlib.SDKTestCase):
     def test_create(self):
@@ -46,6 +48,7 @@ class TestCreate(testlib.SDKTestCase):
             self.service.event_types.delete(self.event_type_name)
         except KeyError:
             pass
+
 
 class TestEventType(testlib.SDKTestCase):
     def setUp(self):
@@ -77,7 +80,7 @@ class TestEventType(testlib.SDKTestCase):
         self.assertEqual(self.event_type['search'], kwargs['search'])
         self.assertEqual(self.event_type['description'], kwargs['description'])
         self.assertEqual(self.event_type['priority'], kwargs['priority'])
-                         
+
     def test_enable_disable(self):
         self.assertEqual(self.event_type['disabled'], '0')
         self.event_type.disable()
@@ -86,6 +89,7 @@ class TestEventType(testlib.SDKTestCase):
         self.event_type.enable()
         self.event_type.refresh()
         self.assertEqual(self.event_type['disabled'], '0')
+
 
 if __name__ == "__main__":
     try:

@@ -19,6 +19,7 @@ import logging
 
 import splunklib.client as client
 
+
 class FiredAlertTestCase(testlib.SDKTestCase):
     def setUp(self):
         super(FiredAlertTestCase, self).setUp()
@@ -56,7 +57,7 @@ class FiredAlertTestCase(testlib.SDKTestCase):
         self.assertEqual(len(self.saved_search.history()), 0)
         self.assertEqual(len(self.saved_search.fired_alerts), 0)
         self.assertFalse(self.saved_search_name in self.service.fired_alerts)
-        
+
     def test_alerts_on_events(self):
         self.assertEqual(self.saved_search.alert_count, 0)
         self.assertEqual(len(self.saved_search.fired_alerts), 0)
@@ -70,14 +71,17 @@ class FiredAlertTestCase(testlib.SDKTestCase):
         self.index.refresh()
         self.index.submit('This is a test ' + testlib.tmpname(),
                           sourcetype='sdk_use', host='boris')
+
         def f():
             self.index.refresh()
-            return int(self.index['totalEventCount']) == eventCount+1
+            return int(self.index['totalEventCount']) == eventCount + 1
+
         self.assertEventuallyTrue(f, timeout=50)
 
         def g():
             self.saved_search.refresh()
             return self.saved_search.alert_count == 1
+
         self.assertEventuallyTrue(g, timeout=200)
 
         alerts = self.saved_search.fired_alerts
@@ -88,6 +92,7 @@ class FiredAlertTestCase(testlib.SDKTestCase):
             alert_group.count
             for alert in alert_group.alerts:
                 alert.content
+
 
 if __name__ == "__main__":
     try:

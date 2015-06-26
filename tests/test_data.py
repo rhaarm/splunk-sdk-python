@@ -22,6 +22,7 @@ import testlib
 
 import splunklib.data as data
 
+
 class DataTestCase(testlib.SDKTestCase):
     def test_elems(self):
         result = data.load("")
@@ -84,7 +85,7 @@ class DataTestCase(testlib.SDKTestCase):
 
         result = data.load("<e1 a1='v1'><e2 a1='v1'>v2</e2></e1>")
         self.assertEqual(result,
-            {'e1': {'a1': 'v1', 'e2': {'$text': 'v2', 'a1': 'v1'}}})
+                         {'e1': {'a1': 'v1', 'e2': {'$text': 'v2', 'a1': 'v1'}}})
 
     def test_real(self):
         """Test some real Splunk response examples."""
@@ -119,8 +120,9 @@ class DataTestCase(testlib.SDKTestCase):
             self.assertRaises(et.ParseError, data.load, "<dict</dict>")
         else:
             from xml.parsers.expat import ExpatError
+
             self.assertRaises(ExpatError, data.load, "<dict</dict>")
-            
+
         self.assertRaises(KeyError, data.load, "<dict><key>a</key></dict>")
 
     def test_dict(self):
@@ -160,8 +162,8 @@ class DataTestCase(testlib.SDKTestCase):
                 </key>
               </dict>
             </content>""")
-        self.assertEqual(result, 
-            {'content': {'n1': {'n1n1': "n1v1"}, 'n2': {'n2n1': "n2v1"}}})
+        self.assertEqual(result,
+                         {'content': {'n1': {'n1n1': "n1v1"}, 'n2': {'n2n1': "n2v1"}}})
 
         result = data.load("""
             <content>
@@ -173,8 +175,8 @@ class DataTestCase(testlib.SDKTestCase):
                 </key>
               </dict>
             </content>""")
-        self.assertEqual(result, 
-            {'content': {'n1': ['1', '2', '3', '4']}})
+        self.assertEqual(result,
+                         {'content': {'n1': ['1', '2', '3', '4']}})
 
     def test_list(self):
         result = data.load("""<list></list>""")
@@ -216,8 +218,8 @@ class DataTestCase(testlib.SDKTestCase):
                 <item><dict><key name='n4'>v4</key></dict></item>
               </list>
             </content>""")
-        self.assertEqual(result, 
-            {'content': [{'n1':"v1"}, {'n2':"v2"}, {'n3':"v3"}, {'n4':"v4"}]})
+        self.assertEqual(result,
+                         {'content': [{'n1': "v1"}, {'n2': "v2"}, {'n3': "v3"}, {'n4': "v4"}]})
 
         result = data.load("""
         <ns1:dict xmlns:ns1="http://dev.splunk.com/ns/rest">
@@ -227,7 +229,7 @@ class DataTestCase(testlib.SDKTestCase):
         </ns1:dict>
         """)
         self.assertEqual(result,
-        {'build': '101089', 'cpu_arch': 'i386', 'isFree': '0'})
+                         {'build': '101089', 'cpu_arch': 'i386', 'isFree': '0'})
 
     def test_record(self):
         d = data.record()
@@ -238,10 +240,10 @@ class DataTestCase(testlib.SDKTestCase):
                   'bar.zrp.peem': 9})
         self.assertEqual(d['foo'], 5)
         self.assertEqual(d['bar.baz'], 6)
-        self.assertEqual(d['bar'], {'baz': 6, 'qux': 7, 'zrp': {'meep': 8, 'peem':9}})
+        self.assertEqual(d['bar'], {'baz': 6, 'qux': 7, 'zrp': {'meep': 8, 'peem': 9}})
         self.assertEqual(d.foo, 5)
         self.assertEqual(d.bar.baz, 6)
-        self.assertEqual(d.bar, {'baz': 6, 'qux': 7, 'zrp': {'meep': 8, 'peem':9}})
+        self.assertEqual(d.bar, {'baz': 6, 'qux': 7, 'zrp': {'meep': 8, 'peem': 9}})
         self.assertRaises(KeyError, d.__getitem__, 'boris')
 
 
@@ -251,4 +253,3 @@ if __name__ == "__main__":
     except ImportError:
         import unittest
     unittest.main()
-

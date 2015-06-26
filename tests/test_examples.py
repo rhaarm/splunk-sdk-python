@@ -19,17 +19,18 @@ from subprocess import PIPE, Popen
 import time
 import sys
 
-import testlib 
+import testlib
+from past.types import basestring
 
 import splunklib.client as client
 
 
 def check_multiline(testcase, first, second, message=None):
     """Assert that two multi-line strings are equal."""
-    testcase.assertTrue(isinstance(first, basestring), 
-        'First argument is not a string')
-    testcase.assertTrue(isinstance(second, basestring), 
-        'Second argument is not a string')
+    testcase.assertTrue(isinstance(first, basestring),
+                        'First argument is not a string')
+    testcase.assertTrue(isinstance(second, basestring),
+                        'Second argument is not a string')
     # Unix-ize Windows EOL
     first = first.replace("\r", "")
     second = second.replace("\r", "")
@@ -76,6 +77,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
             # Only try running the async version of the test if eventlet
             # is present on the system
             import eventlet
+
             result = run("async/async.py async")
             self.assertEquals(result, 0)
         except:
@@ -90,7 +92,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
             conf = self.service.confs['server']
             if 'SDK-STANZA' in conf:
                 conf.delete("SDK-STANZA")
-        except Exception, e:
+        except Exception as e:
             pass
 
         try:
@@ -111,12 +113,12 @@ class ExamplesTestCase(testlib.SDKTestCase):
         self.check_commands(
             "event_types.py --help",
             "event_types.py")
-        
+
     def test_fired_alerts(self):
         self.check_commands(
             "fired_alerts.py --help",
             "fired_alerts.py")
-        
+
     def test_follow(self):
         self.check_commands("follow.py --help")
 
@@ -130,7 +132,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
 
         # Run the cert handler example with a bad cert file, should error.
         result = run(
-            "handlers/handlers_certs.py --ca_file=handlers/cacert.bad.pem", 
+            "handlers/handlers_certs.py --ca_file=handlers/cacert.bad.pem",
             stderr=PIPE)
         self.assertNotEquals(result, 0)
 
@@ -141,7 +143,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
         # Assumes that tiny-proxy.py is in the same directory as the sample
         process = start("handlers/tiny-proxy.py -p 8080", stderr=PIPE)
         try:
-            time.sleep(2) # Wait for proxy to finish initializing
+            time.sleep(2)  # Wait for proxy to finish initializing
             result = run("handlers/handler_proxy.py --proxy=localhost:8080")
             self.assertEquals(result, 0)
         finally:
@@ -172,14 +174,14 @@ class ExamplesTestCase(testlib.SDKTestCase):
         self.check_commands(
             "inputs.py --help",
             "inputs.py")
-        
+
     def test_job(self):
         self.check_commands(
             "job.py --help",
             "job.py",
             "job.py list",
             "job.py list @0")
-        
+
     def test_loggers(self):
         self.check_commands(
             "loggers.py --help",
@@ -192,12 +194,12 @@ class ExamplesTestCase(testlib.SDKTestCase):
         self.check_commands(
             "saved_searches.py --help",
             "saved_searches.py")
-        
+
     def test_search(self):
         self.check_commands(
             "search.py --help",
             ["search.py", "search * | head 10"],
-            ["search.py", 
+            ["search.py",
              "search * | head 10 | stats count", '--output_mode=csv'])
 
     def test_spcmd(self):
@@ -257,18 +259,18 @@ class ExamplesTestCase(testlib.SDKTestCase):
             output_file.close()
             os.remove(output_path)
 
-        custom_searches = [ 
+        custom_searches = [
             {
                 "script": "custom_search/bin/usercount.py",
                 "input": "../tests/data/custom_search/usercount.in",
                 "baseline": "../tests/data/custom_search/usercount.baseline"
             },
-            { 
+            {
                 "script": "twitted/twitted/bin/hashtags.py",
                 "input": "../tests/data/custom_search/hashtags.in",
                 "baseline": "../tests/data/custom_search/hashtags.baseline"
             },
-            { 
+            {
                 "script": "twitted/twitted/bin/tophashtags.py",
                 "input": "../tests/data/custom_search/tophashtags.in",
                 "baseline": "../tests/data/custom_search/tophashtags.baseline"
@@ -290,14 +292,14 @@ class ExamplesTestCase(testlib.SDKTestCase):
 
         # Create a tracker
         tracker = analytics.input.AnalyticsTracker(
-            "sdk-test", self.opts.kwargs, index = "sdk-test")
+            "sdk-test", self.opts.kwargs, index="sdk-test")
 
         service = client.connect(**self.opts.kwargs)
 
         # Before we start, we'll clean the index
         index = service.indexes["sdk-test"]
         index.clean()
-        
+
         tracker.track("test_event", distinct_id="abc123", foo="bar", abc="123")
         tracker.track("test_event", distinct_id="123abc", abc="12345")
 
@@ -306,8 +308,8 @@ class ExamplesTestCase(testlib.SDKTestCase):
 
         # Now, we create a retriever to retrieve the events
         retriever = analytics.output.AnalyticsRetriever(
-            "sdk-test", self.opts.kwargs, index = "sdk-test")    
-        
+            "sdk-test", self.opts.kwargs, index="sdk-test")
+
         # Assert applications
         applications = retriever.applications()
         self.assertEquals(len(applications), 1)
@@ -345,17 +347,18 @@ class ExamplesTestCase(testlib.SDKTestCase):
             count = value["count"]
             self.assertTrue(name in expected_property_values.keys())
             self.assertEqual(count, expected_property_values[name])
-            
+
         # Assert event over time
         over_time = retriever.events_over_time(
-            time_range = analytics.output.TimeRange.MONTH)
+            time_range=analytics.output.TimeRange.MONTH)
         self.assertEquals(len(over_time), 1)
         self.assertEquals(len(over_time["test_event"]), 1)
         self.assertEquals(over_time["test_event"][0]["count"], 2)
 
         # Now that we're done, we'll clean the index 
         index.clean()
- 
+
+
 if __name__ == "__main__":
     os.chdir("../examples")
     try:

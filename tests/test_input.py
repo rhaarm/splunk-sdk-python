@@ -13,16 +13,20 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from __future__ import print_function
+import six
 from splunklib.binding import HTTPError
 
 import testlib
 import logging
+
 try:
     import unittest
 except ImportError:
     import unittest2 as unittest
 
 import splunklib.client as client
+
 
 def highest_port(service, base_port, *kinds):
     """Find the first port >= base_port not in use by any input in kinds."""
@@ -31,6 +35,7 @@ def highest_port(service, base_port, *kinds):
         port = int(input.name.split(':')[-1])
         highest_port = max(port, highest_port)
     return highest_port
+
 
 class TestTcpInputNameHandling(testlib.SDKTestCase):
     def setUp(self):
@@ -46,7 +51,7 @@ class TestTcpInputNameHandling(testlib.SDKTestCase):
 
     def create_tcp_input(self, base_port, kind, **options):
         port = base_port
-        while True: # Find the next unbound port
+        while True:  # Find the next unbound port
             try:
                 input = self.service.inputs.create(str(port), kind, **options)
                 return input
@@ -67,7 +72,7 @@ class TestTcpInputNameHandling(testlib.SDKTestCase):
         )
 
     def test_create_tcp_ports_with_restrictToHost(self):
-        for kind in ['tcp', 'splunktcp']: # Multiplexed UDP ports are not supported
+        for kind in ['tcp', 'splunktcp']:  # Multiplexed UDP ports are not supported
             # Make sure we can create two restricted inputs on the same port
             boris = self.service.inputs.create(str(self.base_port), kind, restrictToHost='boris')
             natasha = self.service.inputs.create(str(self.base_port), kind, restrictToHost='natasha')
@@ -100,13 +105,14 @@ class TestTcpInputNameHandling(testlib.SDKTestCase):
             unrestricted.delete()
 
     def test_update_restrictToHost_fails(self):
-        for kind in ['tcp', 'splunktcp']: # No UDP, since it's broken in Splunk
+        for kind in ['tcp', 'splunktcp']:  # No UDP, since it's broken in Splunk
             boris = self.create_tcp_input(self.base_port, kind, restrictToHost='boris')
 
             self.assertRaises(
                 client.IllegalOperationException,
                 lambda: boris.update(restrictToHost='hilda')
             )
+
 
 class TestRead(testlib.SDKTestCase):
     def test_read(self):
@@ -149,7 +155,7 @@ class TestRead(testlib.SDKTestCase):
 
     def test_oneshot(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection('file_to_upload')
 
@@ -164,20 +170,22 @@ class TestRead(testlib.SDKTestCase):
 
         def f():
             index.refresh()
-            return int(index['totalEventCount']) == eventCount+4
+            return int(index['totalEventCount']) == eventCount + 4
+
         self.assertEventuallyTrue(f, timeout=60)
 
     def test_oneshot_on_nonexistant_file(self):
         name = testlib.tmpname()
         self.assertRaises(HTTPError,
-            self.service.inputs.oneshot, name)
+                          self.service.inputs.oneshot, name)
+
 
 class TestInput(testlib.SDKTestCase):
     def setUp(self):
         super(TestInput, self).setUp()
         inputs = self.service.inputs
-        unrestricted_port = str(highest_port(self.service, 10000, 'tcp', 'splunktcp', 'udp')+1)
-        restricted_port = str(highest_port(self.service, int(unrestricted_port)+1, 'tcp', 'splunktcp')+1)
+        unrestricted_port = str(highest_port(self.service, 10000, 'tcp', 'splunktcp', 'udp') + 1)
+        restricted_port = str(highest_port(self.service, int(unrestricted_port) + 1, 'tcp', 'splunktcp') + 1)
         test_inputs = [{'kind': 'tcp', 'name': unrestricted_port, 'host': 'sdk-test'},
                        {'kind': 'udp', 'name': unrestricted_port, 'host': 'sdk-test'},
                        {'kind': 'tcp', 'name': 'boris:' + restricted_port, 'host': 'sdk-test'}]
@@ -192,7 +200,7 @@ class TestInput(testlib.SDKTestCase):
 
     def tearDown(self):
         super(TestInput, self).tearDown()
-        for entity in self._test_entities.itervalues():
+        for entity in six.itervalues(self._test_entities):
             try:
                 self.service.inputs.delete(
                     kind=entity.kind,
@@ -209,10 +217,10 @@ class TestInput(testlib.SDKTestCase):
 
     def test_lists_modular_inputs(self):
         if self.service.splunk_version[0] < 5:
-            print "Modular inputs don't exist prior to Splunk 5.0. Skipping."
+            print("Modular inputs don't exist prior to Splunk 5.0. Skipping.")
             return
         elif not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         else:
             # Install modular inputs to list, and restart
@@ -221,16 +229,15 @@ class TestInput(testlib.SDKTestCase):
             self.uncheckedRestartSplunk()
 
             inputs = self.service.inputs
-            if ('abcd','test2') not in inputs:
+            if ('abcd', 'test2') not in inputs:
                 inputs.create('abcd', 'test2', field1='boris')
 
             input = inputs['abcd', 'test2']
             self.assertEqual(input.field1, 'boris')
 
-
     def test_create(self):
         inputs = self.service.inputs
-        for entity in self._test_entities.itervalues():
+        for entity in six.itervalues(self._test_entities):
             self.check_entity(entity)
             self.assertTrue(isinstance(entity, client.Input))
 
@@ -241,7 +248,7 @@ class TestInput(testlib.SDKTestCase):
 
     def test_read(self):
         inputs = self.service.inputs
-        for this_entity in self._test_entities.itervalues():
+        for this_entity in six.itervalues(self._test_entities):
             kind, name = this_entity.kind, this_entity.name
             read_entity = inputs[name, kind]
             self.assertEqual(this_entity.kind, read_entity.kind)
@@ -250,7 +257,7 @@ class TestInput(testlib.SDKTestCase):
 
     def test_update(self):
         inputs = self.service.inputs
-        for entity in self._test_entities.itervalues():
+        for entity in six.itervalues(self._test_entities):
             kind, name = entity.kind, entity.name
             kwargs = {'host': 'foo'}
             entity.update(**kwargs)
@@ -259,19 +266,19 @@ class TestInput(testlib.SDKTestCase):
 
     def test_delete(self):
         inputs = self.service.inputs
-        remaining = len(self._test_entities)-1
-        for input_entity in self._test_entities.itervalues():
+        remaining = len(self._test_entities) - 1
+        for input_entity in six.itervalues(self._test_entities):
             name = input_entity.name
             kind = input_entity.kind
             self.assertTrue(name in inputs)
-            self.assertTrue((name,kind) in inputs)
+            self.assertTrue((name, kind) in inputs)
             if remaining == 0:
                 inputs.delete(name)
                 self.assertFalse(name in inputs)
             else:
                 if not name.startswith('boris'):
                     self.assertRaises(client.AmbiguousReferenceException,
-                        inputs.delete, name)
+                                      inputs.delete, name)
                 self.service.inputs.delete(name, kind)
                 self.assertFalse((name, kind) in inputs)
             self.assertRaises(client.HTTPError,

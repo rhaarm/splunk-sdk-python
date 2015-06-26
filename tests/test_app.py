@@ -89,7 +89,7 @@ class TestApp(testlib.SDKTestCase):
         self.assertTrue(name in self.service.apps)
         self.service.apps.delete(name)
         self.assertFalse(name in self.service.apps)
-        self.clear_restart_message() # We don't actually have to restart here.
+        self.clear_restart_message()  # We don't actually have to restart here.
 
     def test_package(self):
         p = self.app.package()
@@ -100,6 +100,7 @@ class TestApp(testlib.SDKTestCase):
     def test_updateInfo(self):
         p = self.app.updateInfo()
         self.assertTrue(p is not None)
+
 
 if __name__ == "__main__":
     try:

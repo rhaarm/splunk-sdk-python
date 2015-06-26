@@ -16,6 +16,7 @@
 
 import testlib
 import logging
+import six
 
 import splunklib.client as client
 
@@ -88,7 +89,7 @@ class TestConfs(testlib.SDKTestCase):
                   testlib.tmpname(): testlib.tmpname()}
         stanza.submit(values)
         stanza.refresh()
-        for key, value in values.iteritems():
+        for key, value in six.iteritems(values):
             self.assertTrue(key in stanza)
             self.assertEqual(value, stanza[key])
 

@@ -41,7 +41,7 @@ class CollectionTestCase(testlib.SDKTestCase):
     def setUp(self):
         super(CollectionTestCase, self).setUp()
         if self.service.splunk_version[0] >= 5 and 'modular_input_kinds' not in collections:
-            collections.append('modular_input_kinds') # Not supported before Splunk 5.0
+            collections.append('modular_input_kinds')  # Not supported before Splunk 5.0
         else:
             logging.info("Skipping modular_input_kinds; not supported by Splunk %s" % \
                          '.'.join(str(x) for x in self.service.splunk_version))
@@ -68,12 +68,12 @@ class CollectionTestCase(testlib.SDKTestCase):
             self.assertTrue(found_access_keys >= expected_access_keys,
                             msg='metadata.access is missing keys on ' + \
                                 '%s (found: %s, expected: %s)' % \
-                                (coll, found_access_keys, 
+                                (coll, found_access_keys,
                                  expected_access_keys))
             self.assertTrue(found_fields_keys >= expected_fields_keys,
                             msg='metadata.fields is missing keys on ' + \
                                 '%s (found: %s, expected: %s)' % \
-                                (coll, found_fields_keys, 
+                                (coll, found_fields_keys,
                                  expected_fields_keys))
 
     def test_list(self):
@@ -91,8 +91,8 @@ class CollectionTestCase(testlib.SDKTestCase):
         N = 5
         for coll_name in collections:
             coll = getattr(self.service, coll_name)
-            expected = [ent.name for ent in coll.list(count=N+5)][:N]
-            N = len(expected) # in case there are <N elements
+            expected = [ent.name for ent in coll.list(count=N + 5)][:N]
+            N = len(expected)  # in case there are <N elements
             found = [ent.name for ent in coll.list(count=N)]
             self.assertEqual(expected, found,
                              msg='on %s (expected %s, found %s' % \
@@ -100,10 +100,11 @@ class CollectionTestCase(testlib.SDKTestCase):
 
     def test_list_with_offset(self):
         import random
-        for offset in [random.randint(3,50) for x in range(5)]:
+
+        for offset in [random.randint(3, 50) for x in range(5)]:
             for coll_name in collections:
                 coll = getattr(self.service, coll_name)
-                expected = [ent.name for ent in coll.list(count=offset+10)][offset:]
+                expected = [ent.name for ent in coll.list(count=offset + 10)][offset:]
                 found = [ent.name for ent in coll.list(offset=offset, count=10)]
                 self.assertEqual(expected, found,
                                  msg='on %s (expected %s, found %s)' % \
@@ -195,7 +196,7 @@ class CollectionTestCase(testlib.SDKTestCase):
             self.assertEqual(expected, found,
                              msg='on %s (expected: %s, found: %s)' % \
                                  (coll_name, expected, found))
-        
+
     def test_iteration(self):
         for coll_name in collections:
             coll = getattr(self.service, coll_name)
@@ -204,7 +205,7 @@ class CollectionTestCase(testlib.SDKTestCase):
                 logging.debug("No entities in collection %s; skipping test.", coll_name)
             total = len(expected)
             found = []
-            for ent in coll.iter(pagesize=max(int(total/5.0), 1), count=10):
+            for ent in coll.iter(pagesize=max(int(total / 5.0), 1), count=10):
                 found.append(ent.name)
             self.assertEqual(expected, found,
                              msg='on %s (expected: %s, found: %s)' % \
@@ -217,7 +218,7 @@ class CollectionTestCase(testlib.SDKTestCase):
             if len(expected) == 0:
                 logging.debug("No entities in collection %s; skipping test.", coll_name)
             total = len(expected)
-            page_size = max(int(total/5.0), 1)
+            page_size = max(int(total / 5.0), 1)
             found = []
             offset = 0
             while offset < total:
@@ -238,9 +239,10 @@ class CollectionTestCase(testlib.SDKTestCase):
             name = testlib.tmpname()
             self.assertTrue(name not in coll)
             self.assertRaises(KeyError, coll.__getitem__, name)
-    
+
     def test_getitem_with_namespace_sample_in_changelog(self):
         from splunklib.binding import namespace
+
         ns = client.namespace(owner='nobody', app='search')
         result = self.service.saved_searches['Top five sourcetypes', ns]
 
@@ -256,11 +258,9 @@ class CollectionTestCase(testlib.SDKTestCase):
             self.assertTrue(self.service.inputs[inp.name])
 
 
-
 if __name__ == "__main__":
     try:
         import unittest2 as unittest
     except ImportError:
         import unittest
     unittest.main()
-

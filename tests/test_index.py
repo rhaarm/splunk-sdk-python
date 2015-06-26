@@ -13,7 +13,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+from __future__ import print_function
 import testlib
 import logging
 
@@ -73,7 +73,7 @@ class IndexTest(testlib.SDKTestCase):
         self.index.refresh()
         originalCount = int(self.index['totalEventCount'])
         self.index.submit("Hello again!", sourcetype="Boris", host="meep")
-        self.assertEventuallyTrue(lambda: self.totalEventCount() == originalCount+1, timeout=50)
+        self.assertEventuallyTrue(lambda: self.totalEventCount() == originalCount + 1, timeout=50)
 
         # Cleaning an enabled index on 4.x takes forever, so we disable it.
         # However, cleaning it on 5 requires it to be enabled.
@@ -84,32 +84,32 @@ class IndexTest(testlib.SDKTestCase):
         self.assertEqual(self.index['totalEventCount'], '0')
 
     def test_prefresh(self):
-        self.assertEqual(self.index['disabled'], '0') # Index is prefreshed
+        self.assertEqual(self.index['disabled'], '0')  # Index is prefreshed
 
     def test_submit(self):
         eventCount = int(self.index['totalEventCount'])
         self.assertEqual(self.index['sync'], '0')
         self.assertEqual(self.index['disabled'], '0')
         self.index.submit("Hello again!", sourcetype="Boris", host="meep")
-        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount+1, timeout=50)
+        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount + 1, timeout=50)
 
     def test_submit_via_attach(self):
         eventCount = int(self.index['totalEventCount'])
         cn = self.index.attach()
         cn.send("Hello Boris!\r\n")
         cn.close()
-        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount+1, timeout=60)
+        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount + 1, timeout=60)
 
     def test_submit_via_attached_socket(self):
         eventCount = int(self.index['totalEventCount'])
         f = self.index.attached_socket
         with f() as sock:
             sock.send('Hello world!\r\n')
-        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount+1, timeout=60)
+        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount + 1, timeout=60)
 
     def test_upload(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("file_to_upload")
 
@@ -117,7 +117,8 @@ class IndexTest(testlib.SDKTestCase):
 
         path = self.pathInApp("file_to_upload", ["log.txt"])
         self.index.upload(path)
-        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount+4, timeout=60)
+        self.assertEventuallyTrue(lambda: self.totalEventCount() == eventCount + 4, timeout=60)
+
 
 if __name__ == "__main__":
     try:

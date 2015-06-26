@@ -45,7 +45,7 @@ class TestUtilities(testlib.SDKTestCase):
         ds = list(result)
         self.assertEqual(result.is_preview, False)
         self.assertTrue(isinstance(ds[0], dict) or \
-                            isinstance(ds[0], results.Message))
+                        isinstance(ds[0], results.Message))
         nonmessages = [d for d in ds if isinstance(d, dict)]
         self.assertTrue(len(nonmessages) <= 3)
 
@@ -60,26 +60,28 @@ class TestUtilities(testlib.SDKTestCase):
         ds = list(result)
         self.assertEqual(result.is_preview, False)
         self.assertTrue(isinstance(ds[0], dict) or \
-                            isinstance(ds[0], results.Message))
+                        isinstance(ds[0], results.Message))
         nonmessages = [d for d in ds if isinstance(d, dict)]
         self.assertTrue(len(nonmessages) <= 3)
-    
+
     def test_export_docstring_sample(self):
         import splunklib.client as client
         import splunklib.results as results
-        service = self.service # cheat
+
+        service = self.service  # cheat
         rr = results.ResultsReader(service.jobs.export("search * | head 5"))
         for result in rr:
             if isinstance(result, results.Message):
                 # Diagnostic messages may be returned in the results
-                pass #print '%s: %s' % (result.type, result.message)
+                pass  # print('%s: %s' % (result.type, result.message))
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
-                pass #print result
+                pass  # print(result)
         assert rr.is_preview == False
-    
+
     def test_results_docstring_sample(self):
         import splunklib.results as results
+
         service = self.service  # cheat
         job = service.jobs.create("search * | head 5")
         while not job.is_done():
@@ -88,42 +90,44 @@ class TestUtilities(testlib.SDKTestCase):
         for result in rr:
             if isinstance(result, results.Message):
                 # Diagnostic messages may be returned in the results
-                pass #print '%s: %s' % (result.type, result.message)
+                pass  # print('%s: %s' % (result.type, result.message))
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
-                pass #print result
+                pass  # print(result)
         assert rr.is_preview == False
-    
+
     def test_preview_docstring_sample(self):
         import splunklib.client as client
         import splunklib.results as results
-        service = self.service # cheat
+
+        service = self.service  # cheat
         job = service.jobs.create("search * | head 5")
         rr = results.ResultsReader(job.preview())
         for result in rr:
             if isinstance(result, results.Message):
                 # Diagnostic messages may be returned in the results
-                pass #print '%s: %s' % (result.type, result.message)
+                pass  # print('%s: %s' % (result.type, result.message))
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
-                pass #print result
+                pass  # print(result)
         if rr.is_preview:
-            pass #print "Preview of a running search job."
+            pass  # print("Preview of a running search job.")
         else:
-            pass #print "Job is finished. Results are final."
-    
+            pass  # print("Job is finished. Results are final.")
+
     def test_oneshot_docstring_sample(self):
         import splunklib.client as client
         import splunklib.results as results
-        service = self.service # cheat
+
+        service = self.service  # cheat
         rr = results.ResultsReader(service.jobs.oneshot("search * | head 5"))
         for result in rr:
             if isinstance(result, results.Message):
                 # Diagnostic messages may be returned in the results
-                pass #print '%s: %s' % (result.type, result.message)
+                pass  # print('%s: %s' % (result.type, result.message))
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
-                pass #print result
+                pass  # print(result)
         assert rr.is_preview == False
 
     def test_normal_job_with_garbage_fails(self):
@@ -152,7 +156,7 @@ class TestUtilities(testlib.SDKTestCase):
                           latest_time="now")
         self.assertTrue(job.sid in jobs)
         job.cancel()
-        job.cancel() # Second call should be nop
+        job.cancel()  # Second call should be nop
 
     def check_job(self, job):
         self.check_entity(job)
@@ -192,7 +196,7 @@ class TestJobWithDelayedDone(testlib.SDKTestCase):
 
     def test_enable_preview(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("sleep_command")
         sleep_duration = 100
@@ -218,7 +222,7 @@ class TestJobWithDelayedDone(testlib.SDKTestCase):
 
     def test_setpriority(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("sleep_command")
         sleep_duration = 100
@@ -260,8 +264,8 @@ class TestJob(testlib.SDKTestCase):
         super(TestJob, self).setUp()
         self.query = "search index=_internal | head 3"
         self.job = self.service.jobs.create(
-            query=self.query, 
-            earliest_time="-1m", 
+            query=self.query,
+            earliest_time="-1m",
             latest_time="now")
 
     def tearDown(self):
@@ -310,8 +314,9 @@ class TestJob(testlib.SDKTestCase):
     def test_setttl(self):
         old_ttl = int(self.job['ttl'])
         new_ttl = old_ttl + 1000
-        
+
         from datetime import datetime
+
         start_time = datetime.now()
         self.job.set_ttl(new_ttl)
 
@@ -359,7 +364,7 @@ class TestResultsReader(unittest.TestCase):
                     from collections import OrderedDict
                 except:
                     from splunklib.ordereddict import OrderedDict
-                self.assertTrue(isinstance(r, OrderedDict) 
+                self.assertTrue(isinstance(r, OrderedDict)
                                 or isinstance(r, results.Message))
                 if isinstance(r, OrderedDict):
                     N_results += 1
@@ -381,7 +386,7 @@ class TestResultsReader(unittest.TestCase):
                     from collections import OrderedDict
                 except:
                     from splunklib.ordereddict import OrderedDict
-                self.assertTrue(isinstance(r, OrderedDict) 
+                self.assertTrue(isinstance(r, OrderedDict)
                                 or isinstance(r, results.Message))
                 if isinstance(r, OrderedDict):
                     N_results += 1
@@ -391,17 +396,21 @@ class TestResultsReader(unittest.TestCase):
             self.assertEqual(N_messages, 3)
 
     def test_xmldtd_filter(self):
-        from StringIO import StringIO
-        s = results._XMLDTDFilter(StringIO("<?xml asdf awe awdf=""><boris>Other stuf</boris><?xml dafawe \n asdfaw > ab"))
+        from io import StringIO, BytesIO
+
+        s = results._XMLDTDFilter(
+            BytesIO("<?xml asdf awe awdf=""><boris>Other stuf</boris><?xml dafawe \n asdfaw > ab"))
         self.assertEqual(s.read(), "<boris>Other stuf</boris> ab")
 
     def test_concatenated_stream(self):
-        from StringIO import StringIO
-        s = results._ConcatenatedStream(StringIO("This is a test "),
-                                       StringIO("of the emergency broadcast system."))
+        from io import StringIO, BytesIO
+
+        s = results._ConcatenatedStream(BytesIO("This is a test "),
+                                        BytesIO("of the emergency broadcast system."))
         self.assertEqual(s.read(3), "Thi")
         self.assertEqual(s.read(20), 's is a test of the e')
         self.assertEqual(s.read(), 'mergency broadcast system.')
+
 
 if __name__ == "__main__":
     unittest.main()
