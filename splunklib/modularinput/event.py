@@ -13,9 +13,9 @@
 # under the License.
 
 try:
-    from xml.etree.cElementTree import Element, SubElement, tostring
+    from xml.etree.cElementTree import Element, SubElement, tostring, parse, fromstring
 except ImportError as ie:
-    from xml.etree.ElementTree import Element, SubElement, tostring
+    from xml.etree.ElementTree import Element, SubElement, tostring, parse, fromstring
 
 class Event(object):
     """Represents an event or fragment of an event to be written by this modular input to Splunk.

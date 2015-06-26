@@ -21,7 +21,7 @@ except ImportError:
 
 from splunklib.searchcommands import Configuration, Option, ReportingCommand, StreamingCommand, validators
 from splunklib.searchcommands import search_command_internals
-from cStringIO import StringIO
+from io import StringIO, BytesIO
 from contextlib import closing
 from itertools import izip
 from json import JSONEncoder
@@ -214,7 +214,7 @@ class TestSearchCommandInternals(unittest.TestCase):
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('\r\n')) as input_file:
+        with closing(BytesIO('\r\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 0)
@@ -223,14 +223,14 @@ class TestSearchCommandInternals(unittest.TestCase):
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('this%20is%20an%20unnamed%20single-line%20item\n\n')) as input_file:
+        with closing(BytesIO('this%20is%20an%20unnamed%20single-line%20item\n\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 0)
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('this%20is%20an%20unnamed\nmulti-\nline%20item\n\n')) as input_file:
+        with closing(BytesIO('this%20is%20an%20unnamed\nmulti-\nline%20item\n\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 0)
@@ -239,7 +239,7 @@ class TestSearchCommandInternals(unittest.TestCase):
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('Foo:this%20is%20a%20single-line%20item\n\n')) as input_file:
+        with closing(BytesIO('Foo:this%20is%20a%20single-line%20item\n\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 1)
@@ -247,7 +247,7 @@ class TestSearchCommandInternals(unittest.TestCase):
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('Bar:this is a\nmulti-\nline item\n\n')) as input_file:
+        with closing(BytesIO('Bar:this is a\nmulti-\nline item\n\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 1)
@@ -257,7 +257,7 @@ class TestSearchCommandInternals(unittest.TestCase):
 
         input_header = search_command_internals.InputHeader()
 
-        with closing(StringIO('infoPath:data/input/_empty.csv\n\n')) as input_file:
+        with closing(BytesIO('infoPath:data/input/_empty.csv\n\n')) as input_file:
             input_header.read(input_file)
 
         self.assertEquals(len(input_header), 1)
@@ -275,7 +275,7 @@ class TestSearchCommandInternals(unittest.TestCase):
         input_header = search_command_internals.InputHeader()
         text = reduce(lambda value, item: value + '%s:%s\n' % (item[0], item[1]), collection.iteritems(), '') + '\n'
 
-        with closing(StringIO(text)) as input_file:
+        with closing(BytesIO(text)) as input_file:
             input_header.read(input_file)
 
         self.assertEqual(len(input_header), len(collection))
@@ -286,7 +286,7 @@ class TestSearchCommandInternals(unittest.TestCase):
         # Set of named items with an unnamed item at the beginning (the only
         # place that an unnamed item can appear)
 
-        with closing(StringIO('unnamed item\n' + text)) as input_file:
+        with closing(BytesIO('unnamed item\n' + text)) as input_file:
             input_header.read(input_file)
 
         self.assertEqual(len(input_header), len(collection))

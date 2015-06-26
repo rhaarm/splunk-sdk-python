@@ -19,12 +19,13 @@ import logging
 
 import splunklib.client as client
 
+
 class UserTestCase(testlib.SDKTestCase):
     def check_user(self, user):
         self.check_entity(user)
         # Verify expected fields exist
         [user[f] for f in ['email', 'password', 'realname', 'roles']]
-        
+
     def setUp(self):
         super(UserTestCase, self).setUp()
         self.username = testlib.tmpname()
@@ -82,6 +83,7 @@ class UserTestCase(testlib.SDKTestCase):
         users.delete(self.username.upper())
         self.assertFalse(self.username in users)
         self.assertFalse(self.username.upper() in users)
+
 
 if __name__ == "__main__":
     try:

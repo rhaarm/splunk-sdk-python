@@ -77,7 +77,7 @@ class TestUtilities(testlib.SDKTestCase):
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
                 pass  # print(result)
-        assert rr.is_preview == False
+        assert rr.is_preview is False
 
     def test_results_docstring_sample(self):
         import splunklib.results as results
@@ -94,7 +94,7 @@ class TestUtilities(testlib.SDKTestCase):
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
                 pass  # print(result)
-        assert rr.is_preview == False
+        assert rr.is_preview is False
 
     def test_preview_docstring_sample(self):
         import splunklib.client as client
@@ -128,7 +128,7 @@ class TestUtilities(testlib.SDKTestCase):
             elif isinstance(result, dict):
                 # Normal events are returned as dicts
                 pass  # print(result)
-        assert rr.is_preview == False
+        assert rr.is_preview is False
 
     def test_normal_job_with_garbage_fails(self):
         jobs = self.service.jobs

@@ -19,11 +19,7 @@ from splunklib.modularinput.event import Event
 from splunklib.modularinput.event_writer import EventWriter
 from splunklib.modularinput.script import Script
 from splunklib.modularinput.scheme import Scheme
-
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
+from io import StringIO, BytesIO
 
 try:
     import xml.etree.cElementTree as ET
@@ -32,8 +28,8 @@ except ImportError:
 
 TEST_SCRIPT_PATH = "__IGNORED_SCRIPT_PATH__"
 
-class ScriptTest(unittest.TestCase):
 
+class ScriptTest(unittest.TestCase):
     def test_error_on_script_with_null_scheme(self):
         """A script that returns a null scheme should generate no output on
         stdout and an error on stderr saying that it the scheme was null."""
@@ -46,14 +42,14 @@ class ScriptTest(unittest.TestCase):
             def stream_events(self, inputs, ew):
                 # not used
                 return
-        
+
         script = NewScript()
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
-        in_stream = StringIO()
+        in_stream = BytesIO()
 
         args = [TEST_SCRIPT_PATH, "--scheme"]
         return_value = script.run_script(args, ew, in_stream)
@@ -85,7 +81,7 @@ class ScriptTest(unittest.TestCase):
                 arg2.validation = "is_pos_int('some_name')"
                 scheme.add_argument(arg2)
 
-                return  scheme
+                return scheme
 
             def stream_events(self, inputs, ew):
                 # not used
@@ -93,8 +89,8 @@ class ScriptTest(unittest.TestCase):
 
         script = NewScript()
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
         args = [TEST_SCRIPT_PATH, "--scheme"]
@@ -126,8 +122,8 @@ class ScriptTest(unittest.TestCase):
 
         script = NewScript()
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
         args = [TEST_SCRIPT_PATH, "--validate-arguments"]
@@ -155,8 +151,8 @@ class ScriptTest(unittest.TestCase):
 
         script = NewScript()
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
         args = [TEST_SCRIPT_PATH, "--validate-arguments"]
@@ -197,8 +193,8 @@ class ScriptTest(unittest.TestCase):
         script = NewScript()
         input_configuration = data_open("data/conf_with_2_inputs.xml")
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
         return_value = script.run_script([TEST_SCRIPT_PATH], ew, input_configuration)
@@ -234,8 +230,8 @@ class ScriptTest(unittest.TestCase):
         script = NewScript(self)
         input_configuration = data_open("data/conf_with_2_inputs.xml")
 
-        out = StringIO()
-        err = StringIO()
+        out = BytesIO()
+        err = BytesIO()
         ew = EventWriter(out, err)
 
         self.assertEqual(script.service, None)
@@ -247,6 +243,7 @@ class ScriptTest(unittest.TestCase):
         self.assertEqual("", err.getvalue())
 
         return
+
 
 if __name__ == "__main__":
     unittest.main()

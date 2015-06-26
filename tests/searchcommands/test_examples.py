@@ -431,6 +431,7 @@ class TestSearchCommandsApp(testlib.SDKTestCase):
     @classmethod
     def _open_data_file(cls, relative_path, mode):
         import codecs
+
         return codecs.open(cls._data_file(relative_path), mode, encoding='utf-8')
 
     @classmethod

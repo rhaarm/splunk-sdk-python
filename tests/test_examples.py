@@ -288,7 +288,7 @@ class ExamplesTestCase(testlib.SDKTestCase):
         # We have to add the current path to the PYTHONPATH,
         # otherwise the import doesn't work quite right
         sys.path.append(os.getcwd())
-        import analytics
+        import examples.analytics as analytics
 
         # Create a tracker
         tracker = analytics.input.AnalyticsTracker(

@@ -38,7 +38,8 @@ from xml.etree import ElementTree
 
 # Relative imports
 
-from . import logging, splunk_csv
+import splunklib.searchcommands.logging as logging
+import splunklib.searchcommands.splunk_csv as splunk_csv
 from .decorators import Option
 from .validators import Boolean, Fieldname
 from .search_command_internals import InputHeader, MessagesHeader, SearchCommandParser

@@ -15,11 +15,13 @@
 # under the License.
 
 import testlib
+
 try:
     import unittest
 except ImportError:
     import unittest2 as unittest
 import splunklib.client as client
+
 
 class ModularInputKindTestCase(testlib.SDKTestCase):
     def setUp(self):
@@ -28,7 +30,7 @@ class ModularInputKindTestCase(testlib.SDKTestCase):
 
     def test_list_arguments(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("modular-inputs")
 
@@ -40,14 +42,14 @@ class ModularInputKindTestCase(testlib.SDKTestCase):
 
         expected_args = set(["name", "resname", "key_id", "no_description", "empty_description",
                              "arg_required_on_edit", "not_required_on_edit", "required_on_create",
-                            "not_required_on_create", "number_field", "string_field", "boolean_field"])
+                             "not_required_on_create", "number_field", "string_field", "boolean_field"])
         found_args = set(test1.arguments.keys())
 
         self.assertEqual(expected_args, found_args)
 
     def test_update_raises_exception(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("modular-inputs")
 
@@ -68,7 +70,7 @@ class ModularInputKindTestCase(testlib.SDKTestCase):
 
     def test_list_modular_inputs(self):
         if not self.app_collection_installed():
-            print "Test requires sdk-app-collection. Skipping."
+            print("Test requires sdk-app-collection. Skipping.")
             return
         self.install_app_from_collection("modular-inputs")
 
@@ -78,6 +80,7 @@ class ModularInputKindTestCase(testlib.SDKTestCase):
 
         for m in self.service.modular_input_kinds:
             self.check_modular_input_kind(m)
+
 
 if __name__ == "__main__":
     try:

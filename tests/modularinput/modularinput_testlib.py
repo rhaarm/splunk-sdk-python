@@ -19,11 +19,13 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
-import sys, os
+
+import os
+import sys
+from splunklib.modularinput.utils import xml_compare
 
 sys.path.insert(0, os.path.join('../../splunklib', '..'))
 
-from splunklib.modularinput.utils import xml_compare, parse_xml_data, parse_parameters
 
 def data_open(filepath):
     return open(os.path.join(os.path.dirname(os.path.abspath(__file__)), filepath))

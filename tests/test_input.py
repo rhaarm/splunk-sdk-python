@@ -15,17 +15,12 @@
 # under the License.
 from __future__ import print_function
 import six
-from splunklib.binding import HTTPError
 
 import testlib
 import logging
 
-try:
-    import unittest
-except ImportError:
-    import unittest2 as unittest
-
 import splunklib.client as client
+from splunklib.binding import HTTPError
 
 
 def highest_port(service, base_port, *kinds):

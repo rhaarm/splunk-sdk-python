@@ -26,15 +26,14 @@ import logging
 import os
 import sys
 
+
 @Configuration()
 class SearchCommand(StreamingCommand):
-
     def stream(self, records):
         pass
 
 
 class TestDecorators(unittest.TestCase):
-
     def setUp(self):
         super(TestDecorators, self).setUp()
         return
@@ -140,7 +139,8 @@ class TestDecorators(unittest.TestCase):
                 self.fail('Expected ValueError, but logging_configuration=%s' % command.logging_configuration)
 
             try:
-                command.logging_configuration = os.path.join(TestDecorators._package_directory, 'non-existent.logging.conf')
+                command.logging_configuration = os.path.join(TestDecorators._package_directory,
+                                                             'non-existent.logging.conf')
             except ValueError:
                 pass
             except BaseException as e:
@@ -184,6 +184,7 @@ class TestDecorators(unittest.TestCase):
         return
 
     _package_directory = os.path.dirname(__file__)
+
 
 if __name__ == "__main__":
     unittest.main()

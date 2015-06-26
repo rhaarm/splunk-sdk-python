@@ -18,13 +18,11 @@ try:
     import unittest2 as unittest
 except ImportError:
     import unittest
-
 from splunklib.searchcommands import validators
 import os
 
 
 class TestValidators(unittest.TestCase):
-
     def setUp(self):
         super(TestValidators, self).setUp()
         return
@@ -96,6 +94,7 @@ class TestValidators(unittest.TestCase):
             self.assertRaises(ValueError, validator, path)
 
         return
+
 
 if __name__ == "__main__":
     unittest.main()

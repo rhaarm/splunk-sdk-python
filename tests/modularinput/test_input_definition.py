@@ -17,8 +17,8 @@
 from tests.modularinput.modularinput_testlib import unittest, data_open
 from splunklib.modularinput.input_definition import InputDefinition
 
-class InputDefinitionTestCase(unittest.TestCase):
 
+class InputDefinitionTestCase(unittest.TestCase):
     def test_parse_inputdef_with_zero_inputs(self):
         """Check parsing of XML that contains only metadata"""
 
@@ -68,6 +68,7 @@ class InputDefinitionTestCase(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             found = InputDefinition.parse(data_open("data/conf_with_invalid_inputs.xml"))
+
 
 if __name__ == "__main__":
     unittest.main()

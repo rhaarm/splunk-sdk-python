@@ -17,6 +17,7 @@
 from tests.modularinput.modularinput_testlib import unittest, data_open
 from splunklib.modularinput.validation_definition import ValidationDefinition
 
+
 class ValidationDefinitionTestCase(unittest.TestCase):
     def test_validation_definition_parse(self):
         """Check that parsing produces expected result"""
@@ -40,6 +41,7 @@ class ValidationDefinitionTestCase(unittest.TestCase):
         }
 
         self.assertEqual(expected, found)
+
 
 if __name__ == "__main__":
     unittest.main()

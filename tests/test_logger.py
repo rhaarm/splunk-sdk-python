@@ -20,6 +20,7 @@ import splunklib.client as client
 
 LEVELS = ["INFO", "WARN", "ERROR", "DEBUG", "CRIT"]
 
+
 class LoggerTestCase(testlib.SDKTestCase):
     def check_logger(self, logger):
         self.check_entity(logger)
@@ -42,6 +43,7 @@ class LoggerTestCase(testlib.SDKTestCase):
         logger.update(level=saved)
         logger.refresh()
         self.assertEqual(self.service.loggers['AuditLogger']['level'], saved)
+
 
 if __name__ == "__main__":
     try:

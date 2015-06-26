@@ -15,12 +15,13 @@
 # under the License.
 
 import datetime
-import testlib
 import logging
-
 from time import sleep
 
+import testlib
+
 import splunklib.client as client
+
 
 class TestSavedSearch(testlib.SDKTestCase):
     def setUp(self):
@@ -86,16 +87,15 @@ class TestSavedSearch(testlib.SDKTestCase):
         self.assertRaises(client.HTTPError,
                           self.saved_search.refresh)
 
-    
     def test_update(self):
         is_visible = testlib.to_bool(self.saved_search['is_visible'])
         self.saved_search.update(is_visible=not is_visible)
         self.saved_search.refresh()
         self.assertEqual(testlib.to_bool(self.saved_search['is_visible']), not is_visible)
-        
+
     def test_cannot_update_name(self):
         new_name = self.saved_search_name + '-alteration'
-        self.assertRaises(client.IllegalOperationException, 
+        self.assertRaises(client.IllegalOperationException,
                           self.saved_search.update, name=new_name)
 
     def test_name_collision(self):
@@ -107,7 +107,7 @@ class TestSavedSearch(testlib.SDKTestCase):
         logging.debug("Namespace for collision testing: %s", service.namespace)
         saved_searches = service.saved_searches
         name = testlib.tmpname()
-        
+
         query1 = '* earliest=-1m | head 1'
         query2 = '* earliest=-2m | head 2'
         namespace1 = client.namespace(app='search', sharing='app')
@@ -140,10 +140,10 @@ class TestSavedSearch(testlib.SDKTestCase):
             self.assertTrue(job.sid in self.service.jobs)
         finally:
             job.cancel()
-        
+
     def test_dispatch_with_options(self):
         try:
-            kwargs = { 'dispatch.buckets': 100 }
+            kwargs = {'dispatch.buckets': 100}
             job = self.saved_search.dispatch(**kwargs)
             while not job.is_ready():
                 sleep(0.1)
@@ -160,7 +160,7 @@ class TestSavedSearch(testlib.SDKTestCase):
             while not job.is_ready():
                 sleep(0.1)
             history = self.saved_search.history()
-            self.assertEqual(len(history), N+1)
+            self.assertEqual(len(history), N + 1)
             self.assertTrue(job.sid in [j.sid for j in history])
         finally:
             job.cancel()
@@ -169,17 +169,17 @@ class TestSavedSearch(testlib.SDKTestCase):
         self.saved_search.update(cron_schedule='*/5 * * * *', is_scheduled=True)
         scheduled_times = self.saved_search.scheduled_times()
         logging.debug("Scheduled times: %s", scheduled_times)
-        self.assertTrue(all([isinstance(x, datetime.datetime) 
+        self.assertTrue(all([isinstance(x, datetime.datetime)
                              for x in scheduled_times]))
         time_pairs = zip(scheduled_times[:-1], scheduled_times[1:])
         for earlier, later in time_pairs:
-            diff = later-earlier
+            diff = later - earlier
             # diff is an instance of datetime.timedelta, which
             # didn't get a total_seconds() method until Python 2.7.
             # Since we support Python 2.6, we have to calculate the
             # total seconds ourselves.
-            total_seconds = diff.days*24*60*60 + diff.seconds
-            self.assertEqual(total_seconds/60.0, 5)
+            total_seconds = diff.days * 24 * 60 * 60 + diff.seconds
+            self.assertEqual(total_seconds / 60.0, 5)
 
     def test_no_equality(self):
         self.assertRaises(client.IncomparableException,
@@ -188,7 +188,7 @@ class TestSavedSearch(testlib.SDKTestCase):
     def test_suppress(self):
         suppressed_time = self.saved_search['suppressed']
         self.assertGreaterEqual(suppressed_time, 0)
-        new_suppressed_time = suppressed_time+100
+        new_suppressed_time = suppressed_time + 100
         self.saved_search.suppress(new_suppressed_time)
         self.assertLessEqual(self.saved_search['suppressed'],
                              new_suppressed_time)
@@ -196,6 +196,7 @@ class TestSavedSearch(testlib.SDKTestCase):
                            suppressed_time)
         self.saved_search.unsuppress()
         self.assertEqual(self.saved_search['suppressed'], 0)
+
 
 if __name__ == "__main__":
     try:

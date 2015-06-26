@@ -19,6 +19,7 @@ import logging
 
 import splunklib.client as client
 
+
 class RoleTestCase(testlib.SDKTestCase):
     def setUp(self):
         super(RoleTestCase, self).setUp()
@@ -90,7 +91,6 @@ class RoleTestCase(testlib.SDKTestCase):
     def test_revoke_capability_not_granted(self):
         self.role.revoke('change_own_password')
 
-
     def test_update(self):
         kwargs = {}
         if 'user' in self.role['imported_roles']:
@@ -103,6 +103,7 @@ class RoleTestCase(testlib.SDKTestCase):
         self.role.refresh()
         self.assertEqual(self.role['imported_roles'], kwargs['imported_roles'])
         self.assertEqual(int(self.role['srchJobsQuota']), kwargs['srchJobsQuota'])
+
 
 if __name__ == "__main__":
     try:
