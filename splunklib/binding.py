@@ -34,7 +34,7 @@ import http.client
 import logging
 import socket
 import ssl
-import urllib.parse as urllib
+import urllib.request as urllib
 import io
 import sys
 
