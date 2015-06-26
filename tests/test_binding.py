@@ -13,11 +13,13 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+from future import standard_library
 
+standard_library.install_aliases()
 
-import uuid
-import urllib2
-from StringIO import StringIO
+import urllib.request as urllib2
+# import urllib2
+from io import StringIO, BytesIO
 from xml.etree.ElementTree import XML
 
 import logging
@@ -55,17 +57,20 @@ XNAME_TITLE = XNAMEF_ATOM % "title"
 def load(response):
     return data.load(response.body.read())
 
+
 class BindingTestCase(unittest.TestCase):
     context = None
+
     def setUp(self):
         logging.info("%s", self.__class__.__name__)
         self.opts = testlib.parse([], {}, ".splunkrc")
         self.context = binding.connect(**self.opts.kwargs)
         logging.debug("Connected to splunkd.")
 
+
 class TestResponseReader(BindingTestCase):
     def test_empty(self):
-        response = binding.ResponseReader(StringIO(""))
+        response = binding.ResponseReader(BytesIO(""))
         self.assertTrue(response.empty)
         self.assertEqual(response.peek(10), "")
         self.assertEqual(response.read(10), "")
@@ -77,7 +82,7 @@ class TestResponseReader(BindingTestCase):
 
     def test_read_past_end(self):
         txt = "abcd"
-        response = binding.ResponseReader(StringIO(txt))
+        response = binding.ResponseReader(BytesIO(txt))
         self.assertFalse(response.empty)
         self.assertEqual(response.peek(10), txt)
         self.assertEqual(response.read(10), txt)
@@ -87,7 +92,7 @@ class TestResponseReader(BindingTestCase):
 
     def test_read_partial(self):
         txt = "This is a test of the emergency broadcasting system."
-        response = binding.ResponseReader(StringIO(txt))
+        response = binding.ResponseReader(BytesIO(txt))
         self.assertEqual(response.peek(5), txt[:5])
         self.assertFalse(response.empty)
         self.assertEqual(response.read(), txt)
@@ -96,12 +101,12 @@ class TestResponseReader(BindingTestCase):
 
     def test_readable(self):
         txt = "abcd"
-        response = binding.ResponseReader(StringIO(txt))
+        response = binding.ResponseReader(BytesIO(txt))
         self.assertTrue(response.readable())
 
     def test_readinto_bytearray(self):
         txt = "Checking readinto works as expected"
-        response = binding.ResponseReader(StringIO(txt))
+        response = binding.ResponseReader(BytesIO(txt))
         arr = bytearray(10)
         self.assertEqual(response.readinto(arr), 10)
         self.assertEqual(arr[:10], "Checking r")
@@ -115,10 +120,11 @@ class TestResponseReader(BindingTestCase):
 
     def test_readinto_memoryview(self):
         import sys
+
         if sys.version_info < (2, 7, 0):
             return  # memoryview is new to Python 2.7
         txt = "Checking readinto works as expected"
-        response = binding.ResponseReader(StringIO(txt))
+        response = binding.ResponseReader(BytesIO(txt))
         arr = bytearray(10)
         mv = memoryview(arr)
         self.assertEqual(response.readinto(mv), 10)
@@ -130,7 +136,6 @@ class TestResponseReader(BindingTestCase):
         self.assertEqual(response.readinto(mv), 5)
         self.assertEqual(arr[:5], "ected")
         self.assertTrue(response.empty)
-
 
 
 class TestUrlEncoded(BindingTestCase):
@@ -163,6 +168,7 @@ class TestUrlEncoded(BindingTestCase):
     def test_repr(self):
         self.assertEqual(repr(UrlEncoded('% %')), "UrlEncoded('% %')")
 
+
 class TestAuthority(unittest.TestCase):
     def test_authority_default(self):
         self.assertEqual(binding._authority(),
@@ -188,6 +194,7 @@ class TestAuthority(unittest.TestCase):
                 port="471"),
             "http://splunk.utopia.net:471")
 
+
 class TestUserManipulation(BindingTestCase):
     def setUp(self):
         BindingTestCase.setUp(self)
@@ -199,14 +206,14 @@ class TestUserManipulation(BindingTestCase):
         try:
             response = self.context.delete(PATH_USERS + self.username)
             self.assertEqual(response.status, 200)
-        except HTTPError, e:
+        except HTTPError as e:
             self.assertEqual(e.status, 400)
 
     def tearDown(self):
         BindingTestCase.tearDown(self)
         try:
             self.context.delete(PATH_USERS + self.username)
-        except HTTPError, e:
+        except HTTPError as e:
             if e.status != 400:
                 raise
 
@@ -268,24 +275,24 @@ class TestSocket(BindingTestCase):
     def test_socket(self):
         socket = self.context.connect()
         socket.write("POST %s HTTP/1.1\r\n" % \
-                         self.context._abspath("some/path/to/post/to"))
+                     self.context._abspath("some/path/to/post/to"))
         socket.write("Host: %s:%s\r\n" % \
-                         (self.context.host, self.context.port))
+                     (self.context.host, self.context.port))
         socket.write("Accept-Encoding: identity\r\n")
         socket.write("Authorization: %s\r\n" % \
-                         self.context.token)
+                     self.context.token)
         socket.write("X-Splunk-Input-Mode: Streaming\r\n")
         socket.write("\r\n")
         socket.close()
 
     def test_unicode_socket(self):
         socket = self.context.connect()
-        socket.write(u"POST %s HTTP/1.1\r\n" %\
+        socket.write(u"POST %s HTTP/1.1\r\n" % \
                      self.context._abspath("some/path/to/post/to"))
-        socket.write(u"Host: %s:%s\r\n" %\
+        socket.write(u"Host: %s:%s\r\n" % \
                      (self.context.host, self.context.port))
         socket.write(u"Accept-Encoding: identity\r\n")
-        socket.write(u"Authorization: %s\r\n" %\
+        socket.write(u"Authorization: %s\r\n" % \
                      self.context.token)
         socket.write(u"X-Splunk-Input-Mode: Streaming\r\n")
         socket.write("\r\n")
@@ -296,6 +303,7 @@ class TestSocket(BindingTestCase):
         self.context.host = socket.gethostbyname(self.context.host)
         self.assertTrue(self.context.connect())
 
+
 class TestUnicodeConnect(BindingTestCase):
     def test_unicode_connect(self):
         opts = self.opts.kwargs.copy()
@@ -304,6 +312,7 @@ class TestUnicodeConnect(BindingTestCase):
         # Just check to make sure the service is alive
         response = context.get("/services")
         self.assertEqual(response.status, 200)
+
 
 class TestAutologin(BindingTestCase):
     def test_with_autologin(self):
@@ -319,13 +328,13 @@ class TestAutologin(BindingTestCase):
         self.assertRaises(AuthenticationError,
                           self.context.get, "/services")
 
+
 class TestAbspath(BindingTestCase):
     def setUp(self):
         BindingTestCase.setUp(self)
         self.kwargs = self.opts.kwargs.copy()
         if 'app' in self.kwargs: del self.kwargs['app']
         if 'owner' in self.kwargs: del self.kwargs['owner']
-
 
     def test_default(self):
         path = self.context._abspath("foo", owner=None, app=None)
@@ -358,12 +367,12 @@ class TestAbspath(BindingTestCase):
         self.assertEqual(path, "/servicesNS/nobody/MyApp/foo")
 
     def test_sharing_global(self):
-        path = self.context._abspath("foo", owner="me", app="MyApp",sharing="global")
+        path = self.context._abspath("foo", owner="me", app="MyApp", sharing="global")
         self.assertTrue(isinstance(path, UrlEncoded))
         self.assertEqual(path, "/servicesNS/nobody/MyApp/foo")
 
     def test_sharing_system(self):
-        path = self.context._abspath("foo bar", owner="me", app="MyApp",sharing="system")
+        path = self.context._abspath("foo bar", owner="me", app="MyApp", sharing="system")
         self.assertTrue(isinstance(path, UrlEncoded))
         self.assertEqual(path, "/servicesNS/nobody/system/foo%20bar")
 
@@ -424,6 +433,7 @@ class TestAbspath(BindingTestCase):
         self.assertTrue(isinstance(path, UrlEncoded))
         self.assertEqual(path, "/servicesNS/nobody/system/foo")
 
+
 # An urllib2 based HTTP request handler, used to test the binding layers
 # support for pluggable request handlers.
 def urllib2_handler(url, message, **kwargs):
@@ -437,14 +447,15 @@ def urllib2_handler(url, message, **kwargs):
             response = urllib2.urlopen(req, context=ssl._create_unverified_context())
         else:
             response = urllib2.urlopen(req)
-    except urllib2.HTTPError, response:
-        pass # Propagate HTTP errors via the returned response message
+    except urllib2.HTTPError as response:
+        pass  # Propagate HTTP errors via the returned response message
     return {
         'status': response.code,
         'reason': response.msg,
         'headers': response.info().dict,
-        'body': StringIO(response.read())
+        'body': BytesIO(response.read())
     }
+
 
 def isatom(body):
     """Answers if the given response body looks like ATOM."""
@@ -454,6 +465,7 @@ def isatom(body):
         root.find(XNAME_AUTHOR) is not None and \
         root.find(XNAME_ID) is not None and \
         root.find(XNAME_TITLE) is not None
+
 
 class TestPluggableHTTP(testlib.SDKTestCase):
     # Verify pluggable HTTP reqeust handlers.
@@ -471,6 +483,7 @@ class TestPluggableHTTP(testlib.SDKTestCase):
                 body = context.get(path).body.read()
                 self.assertTrue(isatom(body))
 
+
 class TestLogout(BindingTestCase):
     def test_logout(self):
         response = self.context.get("/services")
@@ -486,71 +499,72 @@ class TestLogout(BindingTestCase):
         response = self.context.get("/services")
         self.assertEqual(response.status, 200)
 
+
 class TestNamespace(unittest.TestCase):
     def test_namespace(self):
         tests = [
-            ({ },
-             { 'sharing': None, 'owner': None, 'app': None }),
+            ({},
+             {'sharing': None, 'owner': None, 'app': None}),
 
-            ({ 'owner': "Bob" },
-             { 'sharing': None, 'owner': "Bob", 'app': None }),
+            ({'owner': "Bob"},
+             {'sharing': None, 'owner': "Bob", 'app': None}),
 
-            ({ 'app': "search" },
-             { 'sharing': None, 'owner': None, 'app': "search" }),
+            ({'app': "search"},
+             {'sharing': None, 'owner': None, 'app': "search"}),
 
-            ({ 'owner': "Bob", 'app': "search" },
-             { 'sharing': None, 'owner': "Bob", 'app': "search" }),
+            ({'owner': "Bob", 'app': "search"},
+             {'sharing': None, 'owner': "Bob", 'app': "search"}),
 
-            ({ 'sharing': "user" },
-             { 'sharing': "user", 'owner': None, 'app': None }),
+            ({'sharing': "user"},
+             {'sharing': "user", 'owner': None, 'app': None}),
 
-            ({ 'sharing': "user", 'owner': "Bob" },
-             { 'sharing': "user", 'owner': "Bob", 'app': None }),
+            ({'sharing': "user", 'owner': "Bob"},
+             {'sharing': "user", 'owner': "Bob", 'app': None}),
 
-            ({ 'sharing': "user", 'app': "search" },
-             { 'sharing': "user", 'owner': None, 'app': "search" }),
+            ({'sharing': "user", 'app': "search"},
+             {'sharing': "user", 'owner': None, 'app': "search"}),
 
-            ({ 'sharing': "user", 'owner': "Bob", 'app': "search" },
-             { 'sharing': "user", 'owner': "Bob", 'app': "search" }),
+            ({'sharing': "user", 'owner': "Bob", 'app': "search"},
+             {'sharing': "user", 'owner': "Bob", 'app': "search"}),
 
-            ({ 'sharing': "app" },
-             { 'sharing': "app", 'owner': "nobody", 'app': None }),
+            ({'sharing': "app"},
+             {'sharing': "app", 'owner': "nobody", 'app': None}),
 
-            ({ 'sharing': "app", 'owner': "Bob" },
-             { 'sharing': "app", 'owner': "nobody", 'app': None }),
+            ({'sharing': "app", 'owner': "Bob"},
+             {'sharing': "app", 'owner': "nobody", 'app': None}),
 
-            ({ 'sharing': "app", 'app': "search" },
-             { 'sharing': "app", 'owner': "nobody", 'app': "search" }),
+            ({'sharing': "app", 'app': "search"},
+             {'sharing': "app", 'owner': "nobody", 'app': "search"}),
 
-            ({ 'sharing': "app", 'owner': "Bob", 'app': "search" },
-             { 'sharing': "app", 'owner': "nobody", 'app': "search" }),
+            ({'sharing': "app", 'owner': "Bob", 'app': "search"},
+             {'sharing': "app", 'owner': "nobody", 'app': "search"}),
 
-            ({ 'sharing': "global" },
-             { 'sharing': "global", 'owner': "nobody", 'app': None }),
+            ({'sharing': "global"},
+             {'sharing': "global", 'owner': "nobody", 'app': None}),
 
-            ({ 'sharing': "global", 'owner': "Bob" },
-             { 'sharing': "global", 'owner': "nobody", 'app': None }),
+            ({'sharing': "global", 'owner': "Bob"},
+             {'sharing': "global", 'owner': "nobody", 'app': None}),
 
-            ({ 'sharing': "global", 'app': "search" },
-             { 'sharing': "global", 'owner': "nobody", 'app': "search" }),
+            ({'sharing': "global", 'app': "search"},
+             {'sharing': "global", 'owner': "nobody", 'app': "search"}),
 
-            ({ 'sharing': "global", 'owner': "Bob", 'app': "search" },
-             { 'sharing': "global", 'owner': "nobody", 'app': "search" }),
+            ({'sharing': "global", 'owner': "Bob", 'app': "search"},
+             {'sharing': "global", 'owner': "nobody", 'app': "search"}),
 
-            ({ 'sharing': "system" },
-             { 'sharing': "system", 'owner': "nobody", 'app': "system" }),
+            ({'sharing': "system"},
+             {'sharing': "system", 'owner': "nobody", 'app': "system"}),
 
-            ({ 'sharing': "system", 'owner': "Bob" },
-             { 'sharing': "system", 'owner': "nobody", 'app': "system" }),
+            ({'sharing': "system", 'owner': "Bob"},
+             {'sharing': "system", 'owner': "nobody", 'app': "system"}),
 
-            ({ 'sharing': "system", 'app': "search" },
-             { 'sharing': "system", 'owner': "nobody", 'app': "system" }),
+            ({'sharing': "system", 'app': "search"},
+             {'sharing': "system", 'owner': "nobody", 'app': "system"}),
 
-            ({ 'sharing': "system", 'owner': "Bob",    'app': "search" },
-             { 'sharing': "system", 'owner': "nobody", 'app': "system" }),
+            ({'sharing': "system", 'owner': "Bob", 'app': "search"},
+             {'sharing': "system", 'owner': "nobody", 'app': "system"}),
 
-            ({ 'sharing': 'user',   'owner': '-',      'app': '-'},
-             { 'sharing': 'user',   'owner': '-',      'app': '-'})]
+            ({'sharing': 'user', 'owner': '-', 'app': '-'},
+             {'sharing': 'user', 'owner': '-', 'app': '-'})]
 
         for kwargs, expected in tests:
             namespace = binding.namespace(**kwargs)
@@ -559,6 +573,7 @@ class TestNamespace(unittest.TestCase):
 
     def test_namespace_fails(self):
         self.assertRaises(ValueError, binding.namespace, sharing="gobble")
+
 
 class TestTokenAuthentication(BindingTestCase):
     def test_preexisting_token(self):
@@ -574,12 +589,12 @@ class TestTokenAuthentication(BindingTestCase):
 
         socket = newContext.connect()
         socket.write("POST %s HTTP/1.1\r\n" % \
-                         self.context._abspath("some/path/to/post/to"))
+                     self.context._abspath("some/path/to/post/to"))
         socket.write("Host: %s:%s\r\n" % \
-                         (self.context.host, self.context.port))
+                     (self.context.host, self.context.port))
         socket.write("Accept-Encoding: identity\r\n")
         socket.write("Authorization: %s\r\n" % \
-                         self.context.token)
+                     self.context.token)
         socket.write("X-Splunk-Input-Mode: Streaming\r\n")
         socket.write("\r\n")
         socket.close()
@@ -601,17 +616,16 @@ class TestTokenAuthentication(BindingTestCase):
         self.assertEqual(response.status, 200)
 
         socket = newContext.connect()
-        socket.write("POST %s HTTP/1.1\r\n" %\
-                    self.context._abspath("some/path/to/post/to"))
-        socket.write("Host: %s:%s\r\n" %\
+        socket.write("POST %s HTTP/1.1\r\n" % \
+                     self.context._abspath("some/path/to/post/to"))
+        socket.write("Host: %s:%s\r\n" % \
                      (self.context.host, self.context.port))
         socket.write("Accept-Encoding: identity\r\n")
-        socket.write("Authorization: %s\r\n" %\
+        socket.write("Authorization: %s\r\n" % \
                      self.context.token)
         socket.write("X-Splunk-Input-Mode: Streaming\r\n")
         socket.write("\r\n")
         socket.close()
-
 
     def test_connect_with_preexisting_token_sans_user_and_pass(self):
         token = self.context.token
@@ -626,15 +640,16 @@ class TestTokenAuthentication(BindingTestCase):
 
         socket = newContext.connect()
         socket.write("POST %s HTTP/1.1\r\n" % \
-                         self.context._abspath("some/path/to/post/to"))
+                     self.context._abspath("some/path/to/post/to"))
         socket.write("Host: %s:%s\r\n" % \
-                         (self.context.host, self.context.port))
+                     (self.context.host, self.context.port))
         socket.write("Accept-Encoding: identity\r\n")
         socket.write("Authorization: %s\r\n" % \
-                         self.context.token)
+                     self.context.token)
         socket.write("X-Splunk-Input-Mode: Streaming\r\n")
         socket.write("\r\n")
         socket.close()
+
 
 if __name__ == "__main__":
     try:

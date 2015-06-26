@@ -40,7 +40,7 @@ import sys
 
 from datetime import datetime
 from functools import wraps
-from io import StringIO
+from io import StringIO, BytesIO
 
 from contextlib import contextmanager
 
@@ -927,7 +927,7 @@ class AuthenticationError(HTTPError):
     def __init__(self, message, cause):
         # Put the body back in the response so that HTTPError's constructor can
         # read it again.
-        cause._response.body = StringIO(cause.body)
+        cause._response.body = BytesIO(cause.body)
 
         HTTPError.__init__(self, cause._response, message)
 
