@@ -21,8 +21,14 @@ except ImportError:
 
 from json import JSONEncoder
 from subprocess import Popen
-import os
 import shutil
+
+import os
+import sys
+splunk_sdk_path = os.path.join(os.path.dirname(__file__), "../..")
+sys.path.insert(0, splunk_sdk_path)
+sys.path.insert(0, os.path.join(splunk_sdk_path, '../examples'))
+
 from tests import testlib
 
 from splunklib.results import \

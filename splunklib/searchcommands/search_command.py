@@ -38,8 +38,7 @@ from xml.etree import ElementTree
 
 # Relative imports
 
-import splunklib.searchcommands.logging as logging
-import splunklib.searchcommands.splunk_csv as splunk_csv
+from . import splunk_logging, splunk_csv
 from .decorators import Option
 from .validators import Boolean, Fieldname
 from .search_command_internals import InputHeader, MessagesHeader, SearchCommandParser
@@ -55,12 +54,13 @@ class SearchCommand(object):
     _output_file = None
     _search_results_info = None
     _service = None
+    name = None
 
     def __init__(self):
 
         # Variables that may be used, but not altered by derived classes
 
-        self.logger, self._logging_configuration = logging.configure(type(self).__name__)
+        self.logger, self._logging_configuration = splunk_logging.configure(type(self).__name__)
         self.input_header = InputHeader()
         self.messages = MessagesHeader()
 
@@ -82,7 +82,9 @@ class SearchCommand(object):
         return str(self)
 
     def __str__(self):
-        values = [type(self).__name__, str(self.options)] + self.fieldnames
+        values = [type(self).__name__, str(self.options)]
+        if self.fieldnames:
+            values.extend(self.fieldnames)
         text = ' '.join([value for value in values if len(value) > 0])
         return text
 
@@ -101,7 +103,7 @@ class SearchCommand(object):
 
     @logging_configuration.setter
     def logging_configuration(self, value):
-        self.logger, self._logging_configuration = logging.configure(
+        self.logger, self._logging_configuration = splunk_logging.configure(
             type(self).__name__, value)
         return
 

@@ -19,12 +19,17 @@ try:
 except ImportError:
     import unittest
 
+
+import os
+import sys
+splunk_sdk_path = os.path.join(os.path.dirname(__file__), "../..")
+sys.path.insert(0, splunk_sdk_path)
+sys.path.insert(0, os.path.join(splunk_sdk_path, '../examples'))
+
 from splunklib.searchcommands.search_command_internals import SearchCommandParser
 from splunklib.searchcommands import Configuration, StreamingCommand
 
 import logging
-import os
-import sys
 
 
 @Configuration()
