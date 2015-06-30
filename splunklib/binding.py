@@ -34,7 +34,8 @@ import http.client
 import logging
 import socket
 import ssl
-import urllib.request as urllib
+from urllib.request import splitport, splittype, splithost
+from urllib.parse import urlencode, unquote, quote, quote_plus
 import io
 import sys
 
@@ -114,7 +115,7 @@ class UrlEncoded(str):
     **Example**::
 
         import urllib
-        UrlEncoded('%s://%s' % (scheme, urllib.quote(host)), skip_encode=True)
+        UrlEncoded('%s://%s' % (scheme, quote(host)), skip_encode=True)
 
     If you append ``str`` strings and ``UrlEncoded`` strings, the result is also
     URL encoded.
@@ -132,12 +133,12 @@ class UrlEncoded(str):
         elif skip_encode:
             return str.__new__(self, val)
         elif encode_slash:
-            return str.__new__(self, urllib.quote_plus(val))
+            return str.__new__(self, quote_plus(val))
         else:
             # When subclassing str, just call str's __new__ method
             # with your class and the value you want to have in the
             # new string.
-            return str.__new__(self, urllib.quote(val))
+            return str.__new__(self, quote(val))
 
     def __add__(self, other):
         """self + other
@@ -148,7 +149,7 @@ class UrlEncoded(str):
         if isinstance(other, UrlEncoded):
             return UrlEncoded(str.__add__(self, other), skip_encode=True)
         else:
-            return UrlEncoded(str.__add__(self, urllib.quote(other)), skip_encode=True)
+            return UrlEncoded(str.__add__(self, quote(other)), skip_encode=True)
 
     def __radd__(self, other):
         """other + self
@@ -159,7 +160,7 @@ class UrlEncoded(str):
         if isinstance(other, UrlEncoded):
             return UrlEncoded(str.__radd__(self, other), skip_encode=True)
         else:
-            return UrlEncoded(str.__add__(urllib.quote(other), self), skip_encode=True)
+            return UrlEncoded(str.__add__(quote(other), self), skip_encode=True)
 
     def __mod__(self, fields):
         """Interpolation into ``UrlEncoded``s is disabled.
@@ -170,7 +171,7 @@ class UrlEncoded(str):
         raise TypeError("Cannot interpolate into a UrlEncoded object.")
 
     def __repr__(self):
-        return "UrlEncoded(%s)" % repr(urllib.unquote(str(self)))
+        return "UrlEncoded(%s)" % repr(unquote(str(self)))
 
 
 @contextmanager
@@ -964,14 +965,14 @@ def _encode(**kwargs):
             items.extend([(key, item) for item in value])
         else:
             items.append((key, value))
-    return urllib.urlencode(items)
+    return urlencode(items)
 
 
 # Crack the given url into (scheme, host, port, path)
 def _spliturl(url):
-    scheme, opaque = urllib.splittype(url)
-    netloc, path = urllib.splithost(opaque)
-    host, port = urllib.splitport(netloc)
+    scheme, opaque = splittype(url)
+    netloc, path = splithost(opaque)
+    host, port = splitport(netloc)
     # Strip brackets if its an IPv6 address
     if host.startswith('[') and host.endswith(']'): host = host[1:-1]
     if port is None: port = DEFAULT_PORT
@@ -1151,7 +1152,7 @@ class ResponseReader(io.RawIOBase):
     # will work equally well.
     def __init__(self, response):
         self._response = response
-        self._buffer = ''
+        self._buffer = b''
 
     def __str__(self):
         return self.read()
