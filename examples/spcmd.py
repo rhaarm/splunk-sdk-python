@@ -21,14 +21,18 @@
 # set the default output_mode for a session by simply setting a local variable
 # 'output_mode' to a legal output_mode value.
 
-"""An interactive command shell for Splunk.""" 
-
+"""An interactive command shell for Splunk."""
+from __future__ import print_function
+from builtins import input as raw_input
 from code import compile_command, InteractiveInterpreter
+import sys
+import os
+
 try:
-    import readline # Activates readline editing, ignore for windows
+    import readline  # Activates readline editing, ignore for windows
 except ImportError:
     pass
-import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import splunklib.client as client
@@ -38,6 +42,7 @@ try:
 except ImportError:
     raise Exception("Add the SDK repository to your PYTHONPATH to run the examples "
                     "(e.g., export PYTHONPATH=~/splunk-sdk-python.")
+
 
 class Session(InteractiveInterpreter):
     def __init__(self, **kwargs):
@@ -59,43 +64,44 @@ class Session(InteractiveInterpreter):
         return self.runsource(expression)
 
     def load(self, filename):
-        exec open(filename).read() in self.locals, self.locals
+        exec(open(filename).read(), self.locals, self.locals)
 
     # Run the interactive interpreter
     def run(self):
-        print "Welcome to Splunk SDK's Python interactive shell"
-        print "%s connected to %s:%s" % (
-            self.service.username, 
-            self.service.host, 
-            self.service.port)
+        print("Welcome to Splunk SDK's Python interactive shell")
+        print("%s connected to %s:%s" % (
+            self.service.username,
+            self.service.host,
+            self.service.port))
 
         while True:
             try:
                 input = raw_input("> ")
             except EOFError:
-                print "\n\nThanks for using Splunk>.\n"
+                print("\n\nThanks for using Splunk>.\n")
                 return
 
-            if input is None: 
+            if input is None:
                 return
 
             if len(input) == 0:
-                continue # Ignore
+                continue  # Ignore
 
             try:
                 # Gather up lines until we have a fragment that compiles
                 while True:
                     co = compile_command(input)
                     if co is not None: break
-                    input = input + '\n' + raw_input(". ") # Keep trying
+                    input = input + '\n' + raw_input(". ")  # Keep trying
             except SyntaxError:
                 self.showsyntaxerror()
                 continue
-            except Exception, e:
-                print "Error: %s" % e
+            except Exception as e:
+                print("Error: %s" % e)
                 continue
 
             self.runcode(co)
+
 
 RULES = {
     "eval": {
@@ -104,15 +110,17 @@ RULES = {
         'help': "Evaluate the given expression",
     },
     "interactive": {
-        'flags': ["-i", "--interactive"], 
+        'flags': ["-i", "--interactive"],
         'action': "store_true",
         'help': "Enter interactive mode",
     }
 }
 
+
 def actions(opts):
     """Ansers if the given command line options specify any 'actions'."""
-    return len(opts.args) > 0 or opts.kwargs.has_key('eval') 
+    return len(opts.args) > 0 or opts.kwargs.has_key('eval')
+
 
 def main():
     opts = utils.parse(sys.argv[1:], RULES, ".splunkrc")
@@ -121,11 +129,11 @@ def main():
     session = Session(**opts.kwargs)
 
     # Load any non-option args as script files
-    for arg in opts.args: 
+    for arg in opts.args:
         session.load(arg)
 
     # Process any command line evals
-    for arg in opts.kwargs.get('eval', []): 
+    for arg in opts.kwargs.get('eval', []):
         session.eval(arg)
 
     # Enter interactive mode automatically if no actions were specified or
@@ -133,6 +141,6 @@ def main():
     if not actions(opts) or opts.kwargs.has_key("interactive"):
         session.run()
 
+
 if __name__ == "__main__":
     main()
-

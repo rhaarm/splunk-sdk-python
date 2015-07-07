@@ -19,6 +19,7 @@
 from pprint import pprint
 import socket
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from splunklib.client import connect
@@ -30,11 +31,13 @@ except ImportError:
     raise Exception("Add the SDK repository to your PYTHONPATH to run the examples "
                     "(e.g., export PYTHONPATH=~/splunk-sdk-python.")
 
+
 def pretty(response):
     reader = results.ResultsReader(response)
     for result in reader:
         if isinstance(result, dict):
             pprint(result)
+
 
 def main():
     usage = "usage: oneshot.py <search>"
@@ -48,6 +51,7 @@ def main():
     response = service.jobs.oneshot(search)
 
     pretty(response)
+
 
 if __name__ == "__main__":
     main()

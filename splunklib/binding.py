@@ -1160,7 +1160,7 @@ class ResponseReader(io.RawIOBase):
     @property
     def empty(self):
         """Indicates whether there is any more data in the response."""
-        return self.peek(1) == ""
+        return self.peek(1) == b''
 
     def peek(self, size):
         """Nondestructively retrieves a given number of characters.
@@ -1188,10 +1188,11 @@ class ResponseReader(io.RawIOBase):
 
         """
         r = self._buffer
-        self._buffer = ''
+        self._buffer = b''
         if size is not None:
             size -= len(r)
-        r = r + self._response.read(size)
+        data = self._response.read(size)
+        r = r + data
         return r
 
     def readable(self):

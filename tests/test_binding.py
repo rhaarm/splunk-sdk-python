@@ -22,6 +22,7 @@ import urllib.request as urllib2
 # import urllib2
 from io import StringIO, BytesIO
 from xml.etree.ElementTree import XML
+from builtins import str as text
 
 import logging
 import testlib
@@ -71,10 +72,11 @@ class BindingTestCase(unittest.TestCase):
 
 class TestResponseReader(BindingTestCase):
     def test_empty(self):
-        response = binding.ResponseReader(BytesIO(""))
+        txt = BytesIO(b"")
+        response = binding.ResponseReader(txt)
         self.assertTrue(response.empty)
-        self.assertEqual(response.peek(10), "")
-        self.assertEqual(response.read(10), "")
+        self.assertEqual(response.peek(10), b"")
+        self.assertEqual(response.read(10), b"")
 
         arr = bytearray(10)
         self.assertEqual(response.readinto(arr), 0)
@@ -82,41 +84,41 @@ class TestResponseReader(BindingTestCase):
         self.assertTrue(response.empty)
 
     def test_read_past_end(self):
-        txt = "abcd"
+        txt = b"abcd"
         response = binding.ResponseReader(BytesIO(txt))
         self.assertFalse(response.empty)
         self.assertEqual(response.peek(10), txt)
         self.assertEqual(response.read(10), txt)
         self.assertTrue(response.empty)
-        self.assertEqual(response.peek(10), "")
-        self.assertEqual(response.read(10), "")
+        self.assertEqual(response.peek(10), b"")
+        self.assertEqual(response.read(10), b"")
 
     def test_read_partial(self):
-        txt = "This is a test of the emergency broadcasting system."
+        txt = b"This is a test of the emergency broadcasting system."
         response = binding.ResponseReader(BytesIO(txt))
         self.assertEqual(response.peek(5), txt[:5])
         self.assertFalse(response.empty)
         self.assertEqual(response.read(), txt)
         self.assertTrue(response.empty)
-        self.assertEqual(response.read(), '')
+        self.assertEqual(response.read(), b'')
 
     def test_readable(self):
-        txt = "abcd"
+        txt = b"abcd"
         response = binding.ResponseReader(BytesIO(txt))
         self.assertTrue(response.readable())
 
     def test_readinto_bytearray(self):
-        txt = "Checking readinto works as expected"
+        txt = b"Checking readinto works as expected"
         response = binding.ResponseReader(BytesIO(txt))
         arr = bytearray(10)
         self.assertEqual(response.readinto(arr), 10)
-        self.assertEqual(arr[:10], "Checking r")
+        self.assertEqual(arr[:10], b"Checking r")
         self.assertEqual(response.readinto(arr), 10)
-        self.assertEqual(arr[:10], "eadinto wo")
+        self.assertEqual(arr[:10], b"eadinto wo")
         self.assertEqual(response.readinto(arr), 10)
-        self.assertEqual(arr[:10], "rks as exp")
+        self.assertEqual(arr[:10], b"rks as exp")
         self.assertEqual(response.readinto(arr), 5)
-        self.assertEqual(arr[:5], "ected")
+        self.assertEqual(arr[:5], b"ected")
         self.assertTrue(response.empty)
 
     def test_readinto_memoryview(self):
@@ -124,18 +126,18 @@ class TestResponseReader(BindingTestCase):
 
         if sys.version_info < (2, 7, 0):
             return  # memoryview is new to Python 2.7
-        txt = "Checking readinto works as expected"
+        txt = b"Checking readinto works as expected"
         response = binding.ResponseReader(BytesIO(txt))
         arr = bytearray(10)
         mv = memoryview(arr)
         self.assertEqual(response.readinto(mv), 10)
-        self.assertEqual(arr[:10], "Checking r")
+        self.assertEqual(arr[:10], b"Checking r")
         self.assertEqual(response.readinto(mv), 10)
-        self.assertEqual(arr[:10], "eadinto wo")
+        self.assertEqual(arr[:10], b"eadinto wo")
         self.assertEqual(response.readinto(mv), 10)
-        self.assertEqual(arr[:10], "rks as exp")
+        self.assertEqual(arr[:10], b"rks as exp")
         self.assertEqual(response.readinto(mv), 5)
-        self.assertEqual(arr[:5], "ected")
+        self.assertEqual(arr[:5], b"ected")
         self.assertTrue(response.empty)
 
 
@@ -274,41 +276,44 @@ class TestUserManipulation(BindingTestCase):
 
 class TestSocket(BindingTestCase):
     def test_socket(self):
-        socket = self.context.connect()
-        socket.write("POST %s HTTP/1.1\r\n" % \
-                     self.context._abspath("some/path/to/post/to"))
-        socket.write("Host: %s:%s\r\n" % \
-                     (self.context.host, self.context.port))
-        socket.write("Accept-Encoding: identity\r\n")
-        socket.write("Authorization: %s\r\n" % \
-                     self.context.token)
-        socket.write("X-Splunk-Input-Mode: Streaming\r\n")
-        socket.write("\r\n")
-        socket.close()
+        sock = self.context.connect()
+        try:
+            sock.write("POST {} HTTP/1.1\r\n".format(self.context._abspath("some/path/to/post/to")).encode(
+                sys.getdefaultencoding()))
+            sock.write("Host: {}:{}\r\n".format(self.context.host, self.context.port).encode(sys.getdefaultencoding()))
+            sock.write("Accept-Encoding: identity\r\n".encode(sys.getdefaultencoding()))
+            sock.write("Authorization: {}\r\n".format(self.context.token).encode(sys.getdefaultencoding()))
+            sock.write("X-Splunk-Input-Mode: Streaming\r\n".encode(sys.getdefaultencoding()))
+            sock.write("\r\n".encode(sys.getdefaultencoding()))
+        finally:
+            sock.close()
 
     def test_unicode_socket(self):
-        socket = self.context.connect()
-        socket.write(u"POST %s HTTP/1.1\r\n" % \
-                     self.context._abspath("some/path/to/post/to"))
-        socket.write(u"Host: %s:%s\r\n" % \
-                     (self.context.host, self.context.port))
-        socket.write(u"Accept-Encoding: identity\r\n")
-        socket.write(u"Authorization: %s\r\n" % \
-                     self.context.token)
-        socket.write(u"X-Splunk-Input-Mode: Streaming\r\n")
-        socket.write("\r\n")
-        socket.close()
+        sock = self.context.connect()
+        try:
+            sock.write(u"POST {} HTTP/1.1\r\n".format(self.context._abspath(u"some/path/to/post/to")).encode('utf-8'))
+            sock.write(u"Host: {}:{}\r\n".format(self.context.host, self.context.port).encode('utf-8'))
+            sock.write(u"Accept-Encoding: identity\r\n".encode('utf-8'))
+            sock.write(u"Authorization: {}\r\n".format(self.context.token).encode('utf-8'))
+            sock.write(u"X-Splunk-Input-Mode: Streaming\r\n".encode('utf-8'))
+            sock.write(u"\r\n".encode('utf-8'))
+        finally:
+            sock.close()
 
     def test_socket_gethostbyname(self):
-        self.assertTrue(self.context.connect())
+        sock = self.context.connect()
+        self.assertTrue(sock)
+        sock.close()
         self.context.host = socket.gethostbyname(self.context.host)
-        self.assertTrue(self.context.connect())
+        sock = self.context.connect()
+        self.assertTrue(sock)
+        sock.close()
 
 
 class TestUnicodeConnect(BindingTestCase):
     def test_unicode_connect(self):
         opts = self.opts.kwargs.copy()
-        opts['host'] = unicode(opts['host'])
+        opts['host'] = u'%s' % text(opts['host'])
         context = binding.connect(**opts)
         # Just check to make sure the service is alive
         response = context.get("/services")
@@ -440,6 +445,7 @@ class TestAbspath(BindingTestCase):
 def urllib2_handler(url, message, **kwargs):
     method = message['method'].lower()
     data = message.get('body', "") if method == 'post' else None
+    data = str.encode(data) if data is not None else data
     headers = dict(message.get('headers', []))
     req = urllib2.Request(url, data, headers)
     try:
@@ -453,7 +459,7 @@ def urllib2_handler(url, message, **kwargs):
     return {
         'status': response.code,
         'reason': response.msg,
-        'headers': response.info().dict,
+        'headers': response.info(),
         'body': BytesIO(response.read())
     }
 
@@ -589,16 +595,15 @@ class TestTokenAuthentication(BindingTestCase):
         self.assertEqual(response.status, 200)
 
         socket = newContext.connect()
-        socket.write("POST %s HTTP/1.1\r\n" % \
-                     self.context._abspath("some/path/to/post/to"))
-        socket.write("Host: %s:%s\r\n" % \
-                     (self.context.host, self.context.port))
-        socket.write("Accept-Encoding: identity\r\n")
-        socket.write("Authorization: %s\r\n" % \
-                     self.context.token)
-        socket.write("X-Splunk-Input-Mode: Streaming\r\n")
-        socket.write("\r\n")
-        socket.close()
+        try:
+            socket.write("POST {} HTTP/1.1\r\n".format(self.context._abspath("some/path/to/post/to")).encode(sys.getdefaultencoding()))
+            socket.write("Host: {}:%{}\r\n".format(self.context.host, self.context.port).encode(sys.getdefaultencoding()))
+            socket.write("Accept-Encoding: identity\r\n".encode(sys.getdefaultencoding()))
+            socket.write("Authorization: {}\r\n".format(self.context.token).encode(sys.getdefaultencoding()))
+            socket.write("X-Splunk-Input-Mode: Streaming\r\n".encode(sys.getdefaultencoding()))
+            socket.write("\r\n".encode(sys.getdefaultencoding()))
+        finally:
+            socket.close()
 
     def test_preexisting_token_sans_splunk(self):
         token = self.context.token
@@ -616,17 +621,16 @@ class TestTokenAuthentication(BindingTestCase):
         response = newContext.get("/services")
         self.assertEqual(response.status, 200)
 
-        socket = newContext.connect()
-        socket.write("POST %s HTTP/1.1\r\n" % \
-                     self.context._abspath("some/path/to/post/to"))
-        socket.write("Host: %s:%s\r\n" % \
-                     (self.context.host, self.context.port))
-        socket.write("Accept-Encoding: identity\r\n")
-        socket.write("Authorization: %s\r\n" % \
-                     self.context.token)
-        socket.write("X-Splunk-Input-Mode: Streaming\r\n")
-        socket.write("\r\n")
-        socket.close()
+        sock = newContext.connect()
+        try:
+            sock.write("POST {} HTTP/1.1\r\n".format(self.context._abspath("some/path/to/post/to")).encode(sys.getdefaultencoding()))
+            sock.write("Host: {}:{}\r\n".format(self.context.host, self.context.port).encode(sys.getdefaultencoding()))
+            sock.write("Accept-Encoding: identity\r\n".encode(sys.getdefaultencoding()))
+            sock.write("Authorization: {}\r\n".format(self.context.token).encode(sys.getdefaultencoding()))
+            sock.write("X-Splunk-Input-Mode: Streaming\r\n".encode(sys.getdefaultencoding()))
+            sock.write("\r\n".encode(sys.getdefaultencoding()))
+        finally:
+            sock.close()
 
     def test_connect_with_preexisting_token_sans_user_and_pass(self):
         token = self.context.token
@@ -640,16 +644,15 @@ class TestTokenAuthentication(BindingTestCase):
         self.assertEqual(response.status, 200)
 
         socket = newContext.connect()
-        socket.write("POST %s HTTP/1.1\r\n" % \
-                     self.context._abspath("some/path/to/post/to"))
-        socket.write("Host: %s:%s\r\n" % \
-                     (self.context.host, self.context.port))
-        socket.write("Accept-Encoding: identity\r\n")
-        socket.write("Authorization: %s\r\n" % \
-                     self.context.token)
-        socket.write("X-Splunk-Input-Mode: Streaming\r\n")
-        socket.write("\r\n")
-        socket.close()
+        try:
+            socket.write("POST {} HTTP/1.1\r\n".format(self.context._abspath("some/path/to/post/to")).encode(sys.getdefaultencoding()))
+            socket.write("Host: {}:{}\r\n".format(self.context.host, self.context.port).encode(sys.getdefaultencoding()))
+            socket.write("Accept-Encoding: identity\r\n".encode(sys.getdefaultencoding()))
+            socket.write("Authorization: {}\r\n".format(self.context.token).encode(sys.getdefaultencoding()))
+            socket.write("X-Splunk-Input-Mode: Streaming\r\n".encode(sys.getdefaultencoding()))
+            socket.write("\r\n".encode(sys.getdefaultencoding()))
+        finally:
+            socket.close()
 
 
 if __name__ == "__main__":

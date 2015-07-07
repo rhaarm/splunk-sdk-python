@@ -186,7 +186,7 @@ def load_value(element, nametable=None):
     for child in children:
         name, item = load_elem(child, nametable)
         # If we have seen this name before, promote the value to a list
-        if value.has_key(name):
+        if name in value:
             current = value[name]
             if not isinstance(current, list):
                 value[name] = [current]

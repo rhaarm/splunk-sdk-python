@@ -15,8 +15,10 @@
 # under the License.
 
 """Create, delete or list stanza information from/to Splunk confs."""
+from __future__ import print_function
+import sys
+import os
 
-import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from splunklib.client import connect
@@ -27,8 +29,10 @@ except ImportError:
     raise Exception("Add the SDK repository to your PYTHONPATH to run the examples "
                     "(e.g., export PYTHONPATH=~/splunk-sdk-python.")
 
+
 class Program:
     """Break up operations into specific methods."""
+
     def __init__(self, service):
         self.service = service
 
@@ -42,7 +46,7 @@ class Program:
         # however, we must have a conf and stanza.
         cpres = True if count > 0 else False
         spres = True if count > 1 else False
-        kpres = True if count > 2 else False 
+        kpres = True if count > 2 else False
 
         if kpres:
             kvpair = argv[2].split("=")
@@ -61,12 +65,11 @@ class Program:
         if not kpres:
             # create stanza
             conf.create(stan)
-            return 
+            return
 
-        # create key/value pair under existing stanza
+            # create key/value pair under existing stanza
         stanza = conf[stan]
         stanza.submit({key: value})
-
 
     def delete(self, opts):
         """Delete a conf stanza."""
@@ -78,8 +81,8 @@ class Program:
         # however, we must have a conf and stanza.
         cpres = True if count > 0 else False
         spres = True if count > 1 else False
-        kpres = True if count > 2 else False 
-        
+        kpres = True if count > 2 else False
+
         if not cpres:
             error("Conf name is required for delete", 2)
 
@@ -93,7 +96,7 @@ class Program:
         stan = argv[1]
         conf = self.service.confs[name]
         conf.delete(stan)
-        
+
     def list(self, opts):
         """List all confs or if a conf is given, all the stanzas in it."""
 
@@ -104,29 +107,29 @@ class Program:
         # but all are optional
         cpres = True if count > 0 else False
         spres = True if count > 1 else False
-        kpres = True if count > 2 else False 
-        
+        kpres = True if count > 2 else False
+
         if not cpres:
             # List out the available confs
-            for conf in self.service.confs: 
-                print conf.name
+            for conf in self.service.confs:
+                print(conf.name)
         else:
             # Print out detail on the requested conf
             # check for optional stanza, or key requested (or all)
             name = argv[0]
             conf = self.service.confs[name]
-            
+
             for stanza in conf:
                 if (spres and argv[1] == stanza.name) or not spres:
-                    print "[%s]" % stanza.name
+                    print("[%s]" % stanza.name)
                     for key, value in stanza.content.iteritems():
                         if (kpres and argv[2] == key) or not kpres:
-                            print "%s = %s" % (key, value)
-                print
+                            print("%s = %s" % (key, value))
+                print()
 
     def run(self, command, opts):
         """Dispatch the given command & args."""
-        handlers = { 
+        handlers = {
             'create': self.create,
             'delete': self.delete,
             'list': self.list
@@ -135,6 +138,7 @@ class Program:
         if handler is None:
             error("Unrecognized command: %s" % command, 2)
         handler(opts)
+
 
 def main():
     """Main program."""
@@ -165,6 +169,6 @@ def main():
 
     program.run(command, opts)
 
+
 if __name__ == "__main__":
     main()
-

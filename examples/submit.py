@@ -17,6 +17,7 @@
 """A command line utility that submits event data to Splunk from stdin."""
 
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import splunklib.client as client
@@ -42,6 +43,7 @@ RULES = {
     }
 }
 
+
 def main(argv):
     usage = 'usage: %prog [options] <index>'
     opts = parse(argv, RULES, ".splunkrc", usage=usage)
@@ -55,8 +57,8 @@ def main(argv):
     if index not in service.indexes:
         error("Index '%s' does not exist." % index, 2)
 
-    kwargs_submit = dslice(opts.kwargs, 
-        {'eventhost':'host'}, 'source', 'sourcetype')
+    kwargs_submit = dslice(opts.kwargs,
+                           {'eventhost': 'host'}, 'source', 'sourcetype')
 
     #
     # The following code uses the Splunk streaming receiver in order
@@ -79,6 +81,6 @@ def main(argv):
     finally:
         cn.close()
 
+
 if __name__ == "__main__":
     main(sys.argv[1:])
-

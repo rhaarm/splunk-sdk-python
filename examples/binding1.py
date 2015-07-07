@@ -19,7 +19,9 @@
    binds to a sampling of endpoints showing how to access collections,
    entities and 'method-like' endpoints."""
 
-import sys, os
+import sys
+import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from splunklib.binding import connect
@@ -50,6 +52,7 @@ class Service:
     def search(self, query, **kwargs):
         return self.context.post("search/jobs/export", search=query, **kwargs)
 
+
 def main(argv):
     opts = parse(argv, {}, ".splunkrc")
     context = connect(**opts.kwargs)
@@ -59,6 +62,7 @@ def main(argv):
     assert service.info().status == 200
     assert service.settings().status == 200
     assert service.search("search 404").status == 200
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

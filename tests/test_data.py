@@ -91,32 +91,32 @@ class DataTestCase(testlib.SDKTestCase):
         """Test some real Splunk response examples."""
         testpath = path.dirname(path.abspath(__file__))
 
-        fh = open(path.join(testpath, "data/services.xml"), 'r')
-        result = data.load(fh.read())
-        self.assertTrue(result.has_key('feed'))
-        self.assertTrue(result.feed.has_key('author'))
-        self.assertTrue(result.feed.has_key('entry'))
-        titles = [item.title for item in result.feed.entry]
-        self.assertEqual(
-            titles,
-            ['alerts', 'apps', 'authentication', 'authorization', 'data',
-             'deployment', 'licenser', 'messages', 'configs', 'saved',
-             'scheduled', 'search', 'server', 'streams', 'broker', 'clustering',
-             'masterlm'])
+        with open(path.join(testpath, "data/services.xml"), 'r') as fh:
+            result = data.load(fh.read())
+            self.assertTrue('feed' in result)
+            self.assertTrue('author' in result.feed)
+            self.assertTrue('entry' in result.feed)
+            titles = [item.title for item in result.feed.entry]
+            self.assertEqual(
+                titles,
+                ['alerts', 'apps', 'authentication', 'authorization', 'data',
+                 'deployment', 'licenser', 'messages', 'configs', 'saved',
+                 'scheduled', 'search', 'server', 'streams', 'broker', 'clustering',
+                 'masterlm'])
 
-        fh = open(path.join(testpath, "data/services.server.info.xml"), 'r')
-        result = data.load(fh.read())
-        self.assertTrue(result.has_key('feed'))
-        self.assertTrue(result.feed.has_key('author'))
-        self.assertTrue(result.feed.has_key('entry'))
-        self.assertEqual(result.feed.title, 'server-info')
-        self.assertEqual(result.feed.author.name, 'Splunk')
-        self.assertEqual(result.feed.entry.content.cpu_arch, 'i386')
-        self.assertEqual(result.feed.entry.content.os_name, 'Darwin')
-        self.assertEqual(result.feed.entry.content.os_version, '10.8.0')
+        with open(path.join(testpath, "data/services.server.info.xml"), 'r') as fh:
+            result = data.load(fh.read())
+            self.assertTrue('feed' in result)
+            self.assertTrue('author' in result.feed)
+            self.assertTrue('entry' in result.feed)
+            self.assertEqual(result.feed.title, 'server-info')
+            self.assertEqual(result.feed.author.name, 'Splunk')
+            self.assertEqual(result.feed.entry.content.cpu_arch, 'i386')
+            self.assertEqual(result.feed.entry.content.os_name, 'Darwin')
+            self.assertEqual(result.feed.entry.content.os_version, '10.8.0')
 
     def test_invalid(self):
-        if sys.version_info[1] >= 7:
+        if sys.version_info >= (2, 7, 9):
             self.assertRaises(et.ParseError, data.load, "<dict</dict>")
         else:
             from xml.parsers.expat import ExpatError

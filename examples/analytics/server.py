@@ -13,8 +13,9 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+from __future__ import absolute_import
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from bottle import route, run, debug, template, static_file, request
@@ -23,6 +24,7 @@ from time import strptime, mktime
 
 from input import AnalyticsTracker
 from output import AnalyticsRetriever, TimeRange
+
 try:
     import utils
 except ImportError:
@@ -31,6 +33,7 @@ except ImportError:
 
 splunk_opts = None
 retrievers = {}
+
 
 def get_retriever(name):
     global retrievers
@@ -43,9 +46,11 @@ def get_retriever(name):
 
     return retriever
 
+
 @route('/static/:file#.+#')
 def help(file):
     raise static_file(file, root='.')
+
 
 @route('/applications')
 def applications():
@@ -53,20 +58,22 @@ def applications():
 
     retriever = get_retriever("")
     applications = retriever.applications()
-    
+
     output = template('templates/applications', applications=applications)
     return output
 
-def track_app_detail(event, event_name, prop_name, time_range = None):
+
+def track_app_detail(event, event_name, prop_name, time_range=None):
     properties = {}
-    if event_name is not None and not event_name == "":  
+    if event_name is not None and not event_name == "":
         properties["ev_name"] = event_name
-    if prop_name is not None and not prop_name == "": 
+    if prop_name is not None and not prop_name == "":
         properties["prop_name"] = prop_name
-    if time_range is not None and not time_range == "": 
+    if time_range is not None and not time_range == "":
         properties["time_range"] = time_range
 
     tracker.track(event, **properties)
+
 
 @route('/api/application/:name')
 def application(name):
@@ -76,11 +83,11 @@ def application(name):
     time_range = request.GET.get("time_range", TimeRange.MONTH)
 
     # Track the event
-    track_app_detail("api_app_details", event_name, property_name, time_range = time_range)
+    track_app_detail("api_app_details", event_name, property_name, time_range=time_range)
 
     events = retriever.events()
 
-    events_over_time = retriever.events_over_time(event_name=event_name, property=property_name, time_range=time_range) 
+    events_over_time = retriever.events_over_time(event_name=event_name, property=property_name, time_range=time_range)
     properties = []
     if event_name:
         properties = retriever.properties(event_name)
@@ -94,25 +101,26 @@ def application(name):
 
         event_ticks = []
         for tick in ticks:
-            time = strptime(tick["time"][:-6] ,'%Y-%m-%dT%H:%M:%S.%f')
+            time = strptime(tick["time"][:-6], '%Y-%m-%dT%H:%M:%S.%f')
             count = tick["count"]
-            event_ticks.append([int(mktime(time)*1000),count])
-        
+            event_ticks.append([int(mktime(time) * 1000), count])
+
         data.append({
             "label": name,
             "data": event_ticks,
         })
 
-    result = {    
+    result = {
         "events": events,
         "event_name": event_name,
-        "application_name": retriever.application_name, 
+        "application_name": retriever.application_name,
         "properties": properties,
         "data": data,
         "property_name": property_name,
     }
 
     return result
+
 
 @route('/application/:name')
 def application(name):
@@ -125,21 +133,22 @@ def application(name):
 
     events = retriever.events()
 
-    events_over_time = retriever.events_over_time(event_name=event_name, property=property_name) 
+    events_over_time = retriever.events_over_time(event_name=event_name, property=property_name)
     properties = []
     if event_name:
         properties = retriever.properties(event_name)
 
-    output = template('templates/application', 
-                events=events,
-                event_name=event_name,
-                application_name=retriever.application_name, 
-                properties=properties,
-                property_name=property_name,
-                open_tag="{{",
-                close_tag="}}")
+    output = template('templates/application',
+                      events=events,
+                      event_name=event_name,
+                      application_name=retriever.application_name,
+                      properties=properties,
+                      property_name=property_name,
+                      open_tag="{{",
+                      close_tag="}}")
 
     return output
+
 
 def main():
     argv = sys.argv[1:]
@@ -153,6 +162,7 @@ def main():
 
     debug(True)
     run(reloader=True)
+
 
 if __name__ == "__main__":
     main()

@@ -17,6 +17,7 @@
 """A command line utility for executing Splunk searches."""
 
 import sys, os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from time import sleep
 
@@ -29,7 +30,7 @@ except ImportError:
     raise Exception("Add the SDK repository to your PYTHONPATH to run the examples "
                     "(e.g., export PYTHONPATH=~/splunk-sdk-python.")
 
-FLAGS_TOOL = [ "verbose" ]
+FLAGS_TOOL = ["verbose"]
 
 FLAGS_CREATE = [
     "earliest_time", "latest_time", "now", "time_format",
@@ -44,11 +45,13 @@ FLAGS_RESULTS = [
     "offset", "count", "search", "field_list", "f", "output_mode"
 ]
 
+
 def cmdline(argv, flags, **kwargs):
     """A cmdopts wrapper that takes a list of flags and builds the
        corresponding cmdopts rules to match those flags."""
     rules = dict([(flag, {'flags': ["--%s" % flag]}) for flag in flags])
     return parse(argv, rules, ".splunkrc", **kwargs)
+
 
 def main(argv):
     usage = 'usage: %prog [options] "search"'
@@ -86,7 +89,7 @@ def main(argv):
                  'scanCount': job['scanCount'],
                  'eventCount': job['eventCount'],
                  'resultCount': job['resultCount']}
-        progress = float(stats['doneProgress'])*100
+        progress = float(stats['doneProgress']) * 100
         scanned = int(stats['scanCount'])
         matched = int(stats['eventCount'])
         results = int(stats['resultCount'])
@@ -95,7 +98,7 @@ def main(argv):
                 progress, scanned, matched, results))
             sys.stdout.write(status)
             sys.stdout.flush()
-        if stats['isDone'] == '1': 
+        if stats['isDone'] == '1':
             if verbose > 0: sys.stdout.write('\n')
             break
         sleep(2)
@@ -110,6 +113,7 @@ def main(argv):
     sys.stdout.write('\n')
 
     job.cancel()
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])

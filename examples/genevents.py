@@ -15,13 +15,16 @@
 # under the License.
 
 """A tool to generate event data to a named index."""
-
+from __future__ import print_function
 import socket
-import sys, os
+import sys
+import os
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import time
 import datetime
 from splunklib.client import connect
+
 try:
     from utils import parse
 except ImportError:
@@ -34,23 +37,24 @@ SPLUNK_PORT = 9002
 INGEST_TYPE = ["stream", "submit", "tcp"]
 
 RULES = {
-   'ingest': {
+    'ingest': {
         'flags': ["--ingest"],
         'default': 'stream',
         'help': "sets the type of ingest to one of %s" % INGEST_TYPE
     },
-   'inputhost': {
+    'inputhost': {
         'flags': ["--inputhost"],
         'default': "127.0.0.1",
         'help': "input host when using tcp ingest, default is localhost"
     },
-   'type': {
+    'type': {
         'flags': ["--inputport"],
         'default': SPLUNK_PORT,
         'help': "input host port when using tcp ingest, default is %d" % \
                 SPLUNK_PORT
     },
 }
+
 
 def feed_index(service, opts):
     """Feed the named index in a specific manner."""
@@ -63,7 +67,7 @@ def feed_index(service, opts):
     try:
         index = service.indexes[indexname]
     except KeyError:
-        print "Index %s not found" % indexname
+        print("Index %s not found" % indexname)
         return
 
     if itype in ["stream", "submit"]:
@@ -85,7 +89,7 @@ def feed_index(service, opts):
         for i in range(0, 10):
             for j in range(0, 5000):
                 lastevent = "%s: event bunch %d, number %d\n" % \
-                             (datetime.datetime.now().isoformat(), i, j)
+                            (datetime.datetime.now().isoformat(), i, j)
 
                 if itype == "stream":
                     stream.write(lastevent + "\n")
@@ -95,26 +99,27 @@ def feed_index(service, opts):
                     ingest.send(lastevent + "\n")
 
                 count = count + 1
-            
-            print "submitted %d events, sleeping 1 second" % count
+
+            print("submitted %d events, sleeping 1 second" % count)
             time.sleep(1)
     except KeyboardInterrupt:
-        print "^C detected, last event written:"
-        print lastevent
+        print("^C detected, last event written:")
+        print(lastevent)
+
 
 def main():
     usage = "usage: %prog [options] <command> [<args>]"
 
     argv = sys.argv[1:]
     if len(argv) == 0:
-        print "must supply an index name"
+        print("must supply an index name")
         sys.exit(1)
 
     opts = parse(argv, RULES, ".splunkrc", usage=usage)
     service = connect(**opts.kwargs)
 
     if opts.kwargs['ingest'] not in INGEST_TYPE:
-        print "ingest type must be in set %s" % INGEST_TYPE
+        print("ingest type must be in set %s" % INGEST_TYPE)
         sys.exit(1)
 
     feed_index(service, opts)
@@ -122,4 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -77,16 +77,18 @@ class Parser(OptionParser):
             file = open(filepath)
         except:
             error("Unable to open '%s'" % filepath, 2)
-        for line in file:
-            if line.startswith("#"):
-                continue  # Skip comment
-            line = line.strip()
-            if len(line) == 0:
-                continue  # Skip blank line
-            if not line.startswith("-"):
-                line = "--" + line
-            argv.append(line)
-        self.parse(argv)
+        finally:
+            for line in file:
+                if line.startswith("#"):
+                    continue  # Skip comment
+                line = line.strip()
+                if len(line) == 0:
+                    continue  # Skip blank line
+                if not line.startswith("-"):
+                    line = "--" + line
+                argv.append(line)
+            self.parse(argv)
+            file.close()
         return self
 
     def loadif(self, filepath):
